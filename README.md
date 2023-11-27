@@ -5,5 +5,5 @@
 Our code will be released within two weeks.
 
 <div>
-<img src="https://lightgaussian.github.io/static/images/teaser.png" height="350"/>
+<img src="https://lightgaussian.github.io/static/images/teaser.png" height="250"/>
 </div>
