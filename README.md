@@ -21,7 +21,7 @@ After preparing the datasets, users can initiate training from scratch using the
 ```
 bash scripts/run_train_densify_prune.sh
 ```
-This process will generate a point cloud that is approximately 35% of the size of the original 3D Gaussian splatting, while ensuring a comparable quality level
+This process will generate a point cloud file that is approximately 35% of the size of the original 3D Gaussian splatting, while ensuring a comparable quality level
 
 If you have a trained point cloud already you can start the prune process with command:
 ```
