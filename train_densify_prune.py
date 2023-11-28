@@ -194,11 +194,23 @@ def training(
 
             if iteration in args.prune_iterations:
                 ic("in prune")
+                # TODO Add types
+
                 gaussian_list, imp_list = prune_list(gaussians, scene, pipe, background)
                 i = args.prune_iterations.index(iteration)
-                gaussians.prune_gaussians(
-                    (args.prune_decay**i) * args.prune_percent, imp_list
+                volume = torch.prod(gaussians.get_scaling, dim=1)
+                index = int(len(volume) * 0.9)
+                sorted_volume, sorted_indices = torch.sort(
+                    volume, descending=True, dim=0
                 )
+                kth_percent_largest = sorted_volume[index]
+                v_list = torch.pow(volume / kth_percent_largest, args.v_pow)
+                v_list = v_list * imp_list
+                gaussians.prune_gaussians(
+                    (args.prune_decay**i) * args.prune_percent, v_list
+                )
+
+
 
             # Optimizer step
             if iteration < opt.iterations:
