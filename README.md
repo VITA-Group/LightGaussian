@@ -1,6 +1,9 @@
 # LightGaussian: Unbounded 3D Gaussian Compression with 15x Reduction and 200+ FPS
 
 [Project Page](https://lightgaussian.github.io) | [Video](https://youtu.be/470hul75bSM)
+<div>
+<img src="https://lightgaussian.github.io/static/images/teaser.png" height="250"/>
+</div>
 
 Our complete codebase will be released within two weeks.
 
@@ -35,8 +38,6 @@ bash scripts/run_prune_finetune.sh
 - [ ] Upload module 2: distillation
 - [ ] Upload module 3: Vectree Quantization
 - [ ] Upload docker image 
-<div>
-<img src="https://lightgaussian.github.io/static/images/teaser.png" height="250"/>
-</div>
+
 
 This repo is based on [gaussian-splatting](https://github.com/graphdeco-inria/gaussian-splatting)
