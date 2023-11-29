@@ -11,7 +11,7 @@ get_available_gpu() {
 # Initial port number
 port=6041
 
-# Only one dataset specified here
+# Only one dataset specified here, but you could run multiple
 declare -a run_args=(
     "bicycle"
     # "bonsai"
@@ -34,10 +34,13 @@ declare -a run_args=(
 
 
 # Prune percentages and corresponding decays, volume power
-declare -a prune_percents=(0.40)
+declare -a prune_percents=(0.66)
+# decay rate for the following prune. The 2nd prune would prune out 0.5 x 0.6 = 0.3 of the remaining gaussian
 declare -a prune_decays=(1)
+# The volumetric importance power. The higher it is the more weight the volume is in the Global significant
 declare -a v_pow=(0.1)
 
+# prune type, by default the Global significant listed in the paper, but there are other option that you can play with
 declare -a prune_types=(
   "v_important_score"
   # "important_score"
@@ -45,9 +48,9 @@ declare -a prune_types=(
   )
 
 
-# Check that prune_percents and prune_decays arrays have the same length
-if [ "${#prune_percents[@]}" -ne "${#prune_decays[@]}" ]; then
-  echo "The number of prune percents does not match the number of prune decays."
+# Check that prune_percents, prune_decays, and v_pow arrays have the same length
+if [ "${#prune_percents[@]}" -ne "${#prune_decays[@]}" ] || [ "${#prune_percents[@]}" -ne "${#v_pow[@]}" ]; then
+  echo "The lengths of prune_percents, prune_decays, and v_pow arrays do not match."
   exit 1
 fi
 
@@ -56,43 +59,37 @@ for arg in "${run_args[@]}"; do
   for i in "${!prune_percents[@]}"; do
     prune_percent="${prune_percents[i]}"
     prune_decay="${prune_decays[i]}"
-    
-    for prune_type in "${prune_types[@]}"; do
-      for vp in "${v_pow[@]}"; do  # Loop over v_pow values
-        
-        # Wait for an available GPU
-        while true; do
-          gpu_id=$(get_available_gpu)
-          if [[ -n $gpu_id ]]; then
-            echo "GPU $gpu_id is available. Starting prune_finetune.py with dataset '$arg', prune_percent '$prune_percent', prune_type '$prune_type', prune_decay '$prune_decay', and v_pow '$vp' on port $port"
-            
-            CUDA_VISIBLE_DEVICES=$gpu_id nohup python prune_finetune.py \
-              -s "PATH/TO/DATASET/$arg" \
-              -m "OUTPUT/PATH/${arg}_${prune_percent}" \
-              --eval \
-              --port $port \
-              --start_checkpoint "PATH/TO/CHECKPOINT/$arg/chkpnt30000.pth" \
-              --iteration 35000 \
-              --position_lr_init 0.00016 \
-              --position_lr_final 0.0000016 \
-              --prune_percent $prune_percent \
-              --prune_type $prune_type \
-              --prune_decay $prune_decay \
-              --feature_lr 0.005 \
-              --v_pow $vp > "logs_prune/${arg}${prune_percent}prunned.log" 2>&1 &
+    vp="${v_pow[i]}"
 
-            # Increment the port number for the next run
-            ((port++))
-            # Allow some time for the process to initialize and potentially use GPU memory
-            sleep 60
-            break
-          else
-            echo "No GPU available at the moment. Retrying in 1 minute."
-            sleep 60
-          fi
-        done
-        
-      done  # End loop over v_pow values
+    for prune_type in "${prune_types[@]}"; do
+      # Wait for an available GPU
+      while true; do
+        gpu_id=$(get_available_gpu)
+        if [[ -n $gpu_id ]]; then
+          echo "GPU $gpu_id is available. Starting prune_finetune.py with dataset '$arg', prune_percent '$prune_percent', prune_type '$prune_type', prune_decay '$prune_decay', and v_pow '$vp' on port $port"
+          
+          CUDA_VISIBLE_DEVICES=$gpu_id nohup python prune_finetune.py \
+            -s "PATH/TO/DATASET/$arg" \
+            -m "OUTPUT/PATH/${arg}_${prune_percent}" \
+            --eval \
+            --port $port \
+            --start_checkpoint "PATH/TO/CHECKPOINT/$arg/chkpnt30000.pth" \
+            --iteration 35000 \
+            --prune_percent $prune_percent \
+            --prune_type $prune_type \
+            --prune_decay $prune_decay \
+            --v_pow $vp > "logs_prune/${arg}${prune_percent}prunned.log" 2>&1 &
+
+          # Increment the port number for the next run
+          ((port++))
+          # Allow some time for the process to initialize and potentially use GPU memory
+          sleep 60
+          break
+        else
+          echo "No GPU available at the moment. Retrying in 1 minute."
+          sleep 60
+        fi
+      done
     done
   done
 done

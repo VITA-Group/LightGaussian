@@ -40,7 +40,7 @@ declare -a v_pow=(0.1)
 # "important_score"
 
 declare -a prune_types=(
-  "important_score"
+  "v_important_score"
   )
 
 # Check that prune_percents and prune_decays arrays have the same length
@@ -64,7 +64,6 @@ for arg in "${run_args[@]}"; do
           if [[ -n $gpu_id ]]; then
             echo "GPU $gpu_id is available. Starting train_densify_prune.py with dataset '$arg', prune_percent '$prune_percent', prune_type '$prune_type', prune_decay '$prune_decay', and v_pow '$vp' on port $port"
             CUDA_VISIBLE_DEVICES=$gpu_id nohup python train_densify_prune.py \
-              --iterations 7000 \
               -s "/PATH/TO/DATASET/$arg/" \
               -m "OUTPUT/PATH/${arg}" \
               --eval \

@@ -1,6 +1,6 @@
 # LightGaussian: Unbounded 3D Gaussian Compression with 15x Reduction and 200+ FPS
 
-[Project Page](https://lightgaussian.github.io) | [Video](https://youtu.be/470hul75bSM)
+[Project Page](https://lightgaussian.github.io) | [Video](https://youtu.be/470hul75bSM) |[Paper](https://lightgaussian.github.io/static/paper/LightGaussian_arxiv.pdf)
 <div>
 <img src="https://lightgaussian.github.io/static/images/teaser.png" height="250"/>
 </div>
