@@ -14,7 +14,7 @@ Our default, provided install method is based on Conda package and environment m
 conda env create --file environment.yml
 conda activate lightgaussian
 ```
-note: we modified the "diff-gaussian-rasterization" in submodule to get the Global Significant Score.
+note: we modified the "diff-gaussian-rasterization" in the submodule to get the Global Significant Score.
 
 
 
@@ -24,9 +24,9 @@ After preparing the datasets, users can initiate training from scratch using the
 ```
 bash scripts/run_train_densify_prune.sh
 ```
-This process will generate a point cloud file that is approximately 35% of the size of the original 3D Gaussian splatting, while ensuring a comparable quality level
+This process will train the Gaussian model for 20,000 iterations and then prune it twice. The resulting point cloud file is approximately 35% of the size of the original 3D Gaussian splatting while ensuring a comparable quality level.
 
-If you have a trained point cloud already you can start the prune process with command:
+If you have a trained point cloud already you can start the pruning process with the command:
 ```
 bash scripts/run_prune_finetune.sh
 ```
@@ -34,8 +34,8 @@ bash scripts/run_prune_finetune.sh
 
 
 ## TODO
-- [x] Upload module 1: prune
-- [ ] Upload module 2: distillation
+- [x] Upload module 1: Prune & recovery 
+- [ ] Upload module 2: SH distillation
 - [ ] Upload module 3: Vectree Quantization
 - [ ] Upload docker image 
 
