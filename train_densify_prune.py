@@ -69,6 +69,7 @@ def training(
     ema_loss_for_log = 0.0
     progress_bar = tqdm(range(first_iter, opt.iterations), desc="Training progress")
     first_iter += 1
+    gaussians.scheduler = ExponentialLR(gaussians.optimizer, gamma=0.97)
     for iteration in range(first_iter, opt.iterations + 1):
         if network_gui.conn == None:
             network_gui.try_connect()
@@ -110,6 +111,7 @@ def training(
         # Every 1000 its we increase the levels of SH up to a maximum degree
         if iteration % 1000 == 0:
             gaussians.oneupSHdegree()
+            gaussians.scheduler.step()
 
         # Pick a random Camera
         if not viewpoint_stack:
