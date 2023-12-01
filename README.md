@@ -11,6 +11,8 @@ Our complete codebase will be released within two weeks.
 #### Local Setup
 The codebase is based on [gaussian-splatting](https://github.com/graphdeco-inria/gaussian-splatting)
 
+The used datasets, MipNeRF360 and Tank & Temple, are hosted by the paper authors [here](https://jonbarron.info/mipnerf360/). 
+
 For installation:
 ```shell
 conda env create --file environment.yml
@@ -19,25 +21,25 @@ conda activate lightgaussian
 note: we modified the "diff-gaussian-rasterization" in the submodule to get the Global Significant Score.
 
 
-## Training
+## Compress to Compact Representation
 
-Lightgaussian includes **3 stages** to compress 3D Gaussian
+Lightgaussian includes **3 ways** to make the 3D Gaussians be compact
 
-The MipNeRF360 scenes are hosted by the paper authors [here](https://jonbarron.info/mipnerf360/). 
-
-#### Stage 1 Prune & Recovery
-After preparing the datasets, users can initiate training from scratch using the following command (ensure to modify the script's path accordingly):
-```
-bash scripts/run_train_densify_prune.sh
-```
-This process will train the Gaussian model for 20,000 iterations and then prune it twice. The resulting point cloud file is approximately 35% of the size of the original 3D Gaussian splatting while ensuring a comparable quality level.
-
-If you have a trained point cloud already you can start the pruning process with the command:
+#### Option 1 Prune & Recovery
+Users can directly prune a trained 3D-GS checkpoint using the following command (default setting):
 ```
 bash scripts/run_prune_finetune.sh
 ```
-#### Stage 2 SH distillation
-#### Stage 3 Vectree Quantization
+
+One can also train from scratch and jointly prune redundant Gaussians in training using the following command (different setting from the paper):
+```
+bash scripts/run_train_densify_prune.sh
+```
+note: 3D-GS is trained for 20,000 iterations and then prune it. The resulting ply file is approximately 35% of the size of the original 3D-GS while ensuring a comparable quality level.
+
+
+#### Option 2 SH distillation
+#### Option 3 VecTree Quantization
 
 
 
