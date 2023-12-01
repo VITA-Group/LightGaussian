@@ -195,9 +195,7 @@ def training(
                     gaussians.reset_opacity()
 
             if iteration in args.prune_iterations:
-                ic("in prune")
-                # TODO Add types
-
+                # TODO Add prunning types
                 gaussian_list, imp_list = prune_list(gaussians, scene, pipe, background)
                 i = args.prune_iterations.index(iteration)
                 volume = torch.prod(gaussians.get_scaling, dim=1)

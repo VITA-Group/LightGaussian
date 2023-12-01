@@ -77,7 +77,6 @@ def training(
 
     iter_start = torch.cuda.Event(enable_timing=True)
     iter_end = torch.cuda.Event(enable_timing=True)
-    test_camera = scene.getTestCameras().copy().pop()
 
     viewpoint_stack = None
     ema_loss_for_log = 0.0
@@ -156,20 +155,6 @@ def training(
 
         iter_end.record()
 
-        # if iteration == 30001 or iteration == 30002 or iteration == 30003 or iteration % 1000 == 0:
-        #     if not os.path.exists(os.path.join(scene.model_path, "train_view")):
-        #         makedirs(os.path.join(scene.model_path, "train_view"), exist_ok=True)
-        #     test_image = render(test_camera, gaussians, pipe, background)["render"]
-        #     test_gt_image = test_camera.original_image.cuda()
-        #     torchvision.utils.save_image(image, os.path.join(scene.model_path, "train_view", '{}student'.format(iteration) + ".png"))
-        #     torchvision.utils.save_image(gt_image, os.path.join(scene.model_path, "train_view", '{}teacher'.format(iteration) + ".png"))
-        #     torchvision.utils.save_image(test_image, os.path.join(scene.model_path, "train_view", 'test_{}'.format(iteration) + ".png"))
-        #     torchvision.utils.save_image(test_gt_image, os.path.join(scene.model_path, "train_view", 'test_gt{}'.format(iteration) + ".png"))
-        #     torchvision.utils.save_image(abs(test_image-test_gt_image), os.path.join(scene.model_path, "train_view", 'test_residual{}'.format(iteration) + ".png"))
-        #     torchvision.utils.save_image(abs(image-gt_image), os.path.join(scene.model_path, "train_view", '{}residual'.format(iteration) + ".png"))
-        # psnr_v = psnr(image, gt_image)
-        # ic(psnr_v)
-
         with torch.no_grad():
             # Progress bar
             ema_loss_for_log = 0.4 * loss.item() + 0.6 * ema_loss_for_log
@@ -208,9 +193,8 @@ def training(
             )
 
             if iteration in args.prune_iterations:
+                ic("Before prune iteration, number of gaussians: " + str(len(gaussians.get_xyz)))
                 i = args.prune_iterations.index(iteration)
-                ic("Prune iteration: " + str(iteration))
-                ic(len(gaussians.get_xyz))
                 gaussian_list, imp_list = prune_list(gaussians, scene, pipe, background)
 
                 if args.prune_type == "important_score":
@@ -274,7 +258,7 @@ def training(
                 else:
                     raise Exception("Unsupportive prunning method")
 
-                ic("After prune iteration: " + str(len(gaussians.get_xyz)))
+                ic("After prune iteration, number of gaussians: " + str(len(gaussians.get_xyz)))
 
             if iteration in args.densify_iteration:
                 gaussians.max_radii2D[visibility_filter] = torch.max(
@@ -309,11 +293,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--test_iterations", nargs="+", type=int, default=[30_001, 30_002, 35_000]
     )
-    # parser.add_argument("--save_iterations", nargs="+", type=int, default=[30_002, 34_000, 34_000, 39_000, 44_000, 48_000, 53_000, 57_000, 62_000])
-    # try 11
-    # parser.add_argument("--save_iterations", nargs="+", type=int, default=[30_001, 30_002, 32_000, 34_000, 36_000, 38_000, 40_000, 42_000, 44_000, 49_000])
-    # oneshot
-
     parser.add_argument(
         "--save_iterations", nargs="+", type=int, default=[30_001, 30_002, 35_000]
     )
@@ -321,18 +300,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--checkpoint_iterations", nargs="+", type=int, default=[35_000]
     )
-    # parser.add_argument("--prune_iterations", nargs="+", type=int, default=[30_001, 34_000, 38_000, 42_000, 45_000, 48_000]) #try 1
-    # parser.add_argument("--prune_iterations", nargs="+", type=int, default=[30_001, 34_000, 39_000, 44_000, 48_000, 53_000, 57_000])  #try 2
 
-    # try4,5, 10 percent
-    # parser.add_argument("--prune_iterations", nargs="+", type=int, default=[30_001, 31_000, 32_000, 33_000, 34_000, 35_000, 36_000, 37_000, 39_000, 42_000, 45_000, 48_000, 51_000, 54_000])
-    # try 6,7
-
-    # try 10
-    # parser.add_argument("--prune_iterations", nargs="+", type=int, default=[30_001, 32_000, 34_000, 36_000, 38_000, 40_000, 42_000, 44_000])
-    # one shot
     parser.add_argument("--prune_iterations", nargs="+", type=int, default=[30_001])
-    # parser.add_argument("--opacity_prune_iterations", nargs="+", type=int, default=[35_000])
     parser.add_argument("--start_checkpoint", type=str, default=None)
     parser.add_argument("--prune_percent", type=float, default=0.1)
     parser.add_argument("--prune_decay", type=float, default=1)

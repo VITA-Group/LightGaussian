@@ -80,8 +80,6 @@ def training_report(
             "point_cloud/iteration_" + str(iteration),
             "point_cloud.ply",
         )
-        # ic(save_path)
-
         # Check if the file exists
         if os.path.exists(save_path):
             # Get the size of the file
