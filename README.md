@@ -42,6 +42,12 @@ note: 3D-GS is trained for 20,000 iterations and then prune it. The resulting pl
 #### Option 3 VecTree Quantization
 
 
+## Render
+
+```
+# Render with trajectory. By default ellipse, you can change it to spiral or others trajectory by changing to corresponding function.
+python render_video.py --skip_train --skip_test --video
+```
 
 
 ## TODO List
