@@ -24,6 +24,8 @@ note: we modified the "diff-gaussian-rasterization" in the submodule to get the 
 ## Compress to Compact Representation
 
 Lightgaussian includes **3 ways** to make the 3D Gaussians be compact
+<!-- #### Option 0 Run all (currently Prune + SH distillation) -->
+
 
 #### Option 1 Prune & Recovery
 Users can directly prune a trained 3D-GS checkpoint using the following command (default setting):
@@ -46,7 +48,7 @@ note: 3D-GS is trained for 20,000 iterations and then prune it. The resulting pl
 
 ```
 # Render with trajectory. By default ellipse, you can change it to spiral or others trajectory by changing to corresponding function.
-python render_video.py --skip_train --skip_test --video
+python render_video.py --source_path PATH/TO/DATASET --model_path PATH/TO/MODEL --skip_train --skip_test --video 
 ```
 
 
