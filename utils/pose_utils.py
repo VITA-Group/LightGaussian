@@ -1,7 +1,8 @@
 import numpy as np
-# from utils.stepfun import sample_np
+import torch
 from icecream import ic
-from sklearn.decomposition import PCA
+from utils.graphics_utils import getWorld2View2
+
 
 def normalize(x):
     return x / np.linalg.norm(x)
@@ -24,6 +25,17 @@ def poses_avg(poses):
 
     return c2w
 
+def get_focal(camera):
+    focal = camera.FoVx
+    return focal
+
+def poses_avg_fixed_center(poses):
+    hwf = poses[0, :3, -1:]
+    center = poses[:, :3, 3].mean(0)
+    vec2 = [1, 0, 0]
+    up = [0, 0, 1]
+    c2w = np.concatenate([viewmatrix(vec2, up, center), hwf], 1)
+    return c2w
 
 def integrate_weights_np(w):
     """Compute the cumulative sum of w, assuming all weight vectors sum to 1.
@@ -260,7 +272,6 @@ def generate_ellipse_path(views, n_frames=600, const_speed=True, z_variation=0.,
 
     # Calculate the focal point for the path (cameras point toward this).
     center = focus_point_fn(poses)
-    # Path height sits at z=0 (in middle of zero-mean capture pattern).
     offset = np.array([center[0] , center[1],  center[2]*0 ])
     # Calculate scaling for ellipse axes based on input camera positions.
     sc = np.percentile(np.abs(poses[:, :3, 3] - offset), 90, axis=0)
@@ -300,11 +311,9 @@ def generate_ellipse_path(views, n_frames=600, const_speed=True, z_variation=0.,
     avg_up = avg_up / np.linalg.norm(avg_up)
     ind_up = np.argmax(np.abs(avg_up))
     up = np.eye(3)[ind_up] * np.sign(avg_up[ind_up])
-    # up = normalize(poses[:, :3, 1].sum(0))
 
     render_poses = []
     for p in positions:
-        # print(p,low,high, center)
         render_pose = np.eye(4)
         render_pose[:3] = viewmatrix(p - center, up, p)
         render_pose = np.linalg.inv(transform) @ render_pose
@@ -313,7 +322,7 @@ def generate_ellipse_path(views, n_frames=600, const_speed=True, z_variation=0.,
     return render_poses
 
 
-def spherify_poses(views):
+def generate_spherify_path(views):
     poses = []
     for view in views:
         tmp_view = np.eye(4)
@@ -378,5 +387,106 @@ def spherify_poses(views):
         new_poses.append(render_pose)
 
     new_poses = np.stack(new_poses, 0)
-    print(new_poses.shape)
     return new_poses
+
+def gaussain_poses(viewpoint_cam, mean =0, std_dev = 0.03):
+    translate_x = np.random.normal(mean, std_dev)
+    translate_y = np.random.normal(mean, std_dev)
+    translate_z = np.random.normal(mean, std_dev)
+    translate = np.array([translate_x, translate_y, translate_z])
+    viewpoint_cam.world_view_transform = torch.tensor(getWorld2View2(viewpoint_cam.R, viewpoint_cam.T, translate)).transpose(0, 1).cuda()
+    viewpoint_cam.full_proj_transform = (viewpoint_cam.world_view_transform.unsqueeze(0).bmm(viewpoint_cam.projection_matrix.unsqueeze(0))).squeeze(0)
+    viewpoint_cam.camera_center = viewpoint_cam.world_view_transform.inverse()[3, :3]
+    return viewpoint_cam
+
+
+def circular_poses(viewpoint_cam, radius, angle=0.0):
+    translate_x = radius * np.cos(angle)
+    translate_y = radius * np.sin(angle)
+    translate_z = 0
+    translate = np.array([translate_x, translate_y, translate_z])
+    viewpoint_cam.world_view_transform = torch.tensor(getWorld2View2(viewpoint_cam.R, viewpoint_cam.T, translate)).transpose(0, 1).cuda()
+    viewpoint_cam.full_proj_transform = (viewpoint_cam.world_view_transform.unsqueeze(0).bmm(viewpoint_cam.projection_matrix.unsqueeze(0))).squeeze(0)
+    viewpoint_cam.camera_center = viewpoint_cam.world_view_transform.inverse()[3, :3]
+
+    return viewpoint_cam
+
+def generate_spherical_sample_path(views, azimuthal_rots=1, polar_rots=0.75, N=10):
+    poses = []
+    for view in views:
+        tmp_view = np.eye(4)
+        tmp_view[:3] = np.concatenate([view.R.T, view.T[:, None]], 1)
+        tmp_view = np.linalg.inv(tmp_view)
+        tmp_view[:, 1:3] *= -1
+        poses.append(tmp_view)
+        focal = get_focal(view)
+    poses = np.stack(poses, 0)
+    # ic(min_focal, max_focal)
+    
+    c2w = poses_avg(poses)  
+    up = normalize(poses[:, :3, 1].sum(0))  
+    rads = np.percentile(np.abs(poses[:, :3, 3]), 90, 0)
+    rads = np.array(list(rads) + [1.0])
+    ic(rads)
+    render_poses = []
+    focal_range = np.linspace(0.5, 3, N **2+1)
+    index = 0
+    # Modify this loop to include phi
+    for theta in np.linspace(0.0, 2.0 * np.pi * azimuthal_rots, N + 1)[:-1]:
+        for phi in np.linspace(0.0, np.pi * polar_rots, N + 1)[:-1]:
+            
+            # Modify these lines to use spherical coordinates for c
+            c = np.dot(
+                c2w[:3, :4],
+                rads * np.array([
+                    np.sin(phi) * np.cos(theta),
+                    np.sin(phi) * np.sin(theta),
+                    np.cos(phi),
+                    1.0
+                ])
+            )
+            
+            z = normalize(c - np.dot(c2w[:3, :4], np.array([0, 0, -focal_range[index], 1.0])))
+            render_pose = np.eye(4)
+            render_pose[:3] = viewmatrix(z, up, c)  
+            render_pose[:3, 1:3] *= -1
+            render_poses.append(np.linalg.inv(render_pose))
+            index += 1
+    return render_poses
+
+
+def generate_spiral_path(views, focal=1.5, zrate= 0, rots=1, N=600):
+    poses = []
+    focal = 0
+    for view in views:
+        tmp_view = np.eye(4)
+        tmp_view[:3] = np.concatenate([view.R.T, view.T[:, None]], 1)
+        tmp_view = np.linalg.inv(tmp_view)
+        tmp_view[:, 1:3] *= -1
+        poses.append(tmp_view)
+        focal += get_focal(views[0])
+    poses = np.stack(poses, 0)
+
+
+    c2w = poses_avg(poses)
+    up = normalize(poses[:, :3, 1].sum(0))
+
+    # Get radii for spiral path
+    rads = np.percentile(np.abs(poses[:, :3, 3]), 90, 0)
+    render_poses = []
+
+    rads = np.array(list(rads) + [1.0])
+    focal /= len(views)
+
+    for theta in np.linspace(0.0, 2.0 * np.pi * rots, N + 1)[:-1]:
+        c = np.dot(
+            c2w[:3, :4],
+            np.array([np.cos(theta), -np.sin(theta),-np.sin(theta * zrate), 1.0]) * rads,
+        )
+        z = normalize(c - np.dot(c2w[:3, :4], np.array([0, 0, -focal, 1.0])))
+
+        render_pose = np.eye(4)
+        render_pose[:3] = viewmatrix(z, up, c)
+        render_pose[:3, 1:3] *= -1
+        render_poses.append(np.linalg.inv(render_pose))
+    return render_poses
