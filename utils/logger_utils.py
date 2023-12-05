@@ -60,7 +60,7 @@ def training_report(
         tb_writer.add_scalar("iter_time", elapsed, iteration)
 
     # Report test and samples of training set
-    if iteration in testing_iterations or iteration % 3000 == 0:
+    if iteration in testing_iterations:
         ic("report")
         headers = [
             "iteration",

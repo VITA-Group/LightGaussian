@@ -241,14 +241,14 @@ if __name__ == "__main__":
         "--test_iterations",
         nargs="+",
         type=int,
-        default=[7_000, 16_000, 16_001, 24_000, 24_001, 30_000],
+        default=[7_000, 30_000],
     )
     parser.add_argument(
-        "--save_iterations", nargs="+", type=int, default=[7_000, 15_000, 30_000]
+        "--save_iterations", nargs="+", type=int, default=[7_000, 30_000]
     )
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument(
-        "--checkpoint_iterations", nargs="+", type=int, default=[7_000, 15_000, 30_000]
+        "--checkpoint_iterations", nargs="+", type=int, default=[7_000, 30_000]
     )
     parser.add_argument("--start_checkpoint", type=str, default=None)
 
