@@ -62,6 +62,9 @@ python render_video.py --source_path PATH/TO/DATASET --model_path PATH/TO/MODEL 
 - [x] Upload module 3: Vectree Quantization
 - [ ] Upload docker image 
 
+## Acknowledgements
+We would like to express our gratitude to [Yueyu Hu](https://huzi96.github.io/) from NYU for the invaluable discussion on our project.
+
 
 ## BibTeX
 If you find our work useful for your project, please consider citing the following paper.
