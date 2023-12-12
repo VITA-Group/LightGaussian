@@ -4,7 +4,7 @@ from copy import deepcopy
 from tqdm import tqdm, trange
 
 from vq import VectorQuantize
-from utils import read_ply_data, write_ply_data, load_vqdvgo
+from utils import read_ply_data, write_ply_data, load_vqgaussian
 
 
 def parse_args():
@@ -172,12 +172,8 @@ class Quantization():
             
 
         # zip everything together to get final size
-        os.system(f"zip -r {save_path}/extreme_saving.zip {save_path}/extreme_saving")
-        size = os.path.getsize(f'{save_path}/extreme_saving.zip')
-        size_MB = size / 1024.0 / 1024.0
-        print("size = ", size_MB, " MB")
-            
-        print("finish vector quantize!")
+        os.system(f"zip -r {save_path}/extreme_saving.zip {save_path}/extreme_saving")            
+        print("Finish vector quantize!")
         return all_feat, all_indice
     
     def load_f(self, path, name, allow_pickle=False,array_name='arr_0'):
@@ -241,7 +237,7 @@ class Quantization():
 
     def dequantize(self):
         print("Load saved data:")
-        dequantized_feats = load_vqdvgo(os.path.join(self.save_path,'extreme_saving'), device=device)
+        dequantized_feats = load_vqgaussian(os.path.join(self.save_path,'extreme_saving'), device=device)
 
         if self.no_save_ply == False:
             os.makedirs(f'{self.ply_path}/', exist_ok=True)

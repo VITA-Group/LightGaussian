@@ -2,7 +2,7 @@ import os, math, torch
 import numpy as np
 from plyfile import PlyData, PlyElement
 
-def load_vqdvgo(path, device='cuda'):
+def load_vqgaussian(path, device='cuda'):
     def load_f(name, allow_pickle=False,array_name='arr_0'):
         return np.load(os.path.join(path,name),allow_pickle=allow_pickle)[array_name]
 
