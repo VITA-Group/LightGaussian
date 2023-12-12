@@ -55,7 +55,7 @@ python render_video.py --source_path PATH/TO/DATASET --model_path PATH/TO/MODEL 
 ## TODO List
 - [x] Upload module 1: Prune & recovery 
 - [ ] Upload module 2: SH distillation
-- [ ] Upload module 3: Vectree Quantization
+- [x] Upload module 3: Vectree Quantization
 - [ ] Upload docker image 
 
 
