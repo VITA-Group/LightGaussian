@@ -7,9 +7,9 @@ CODEBOOK_SIZE=8192
 
 for SCENE in "${SCENES[@]}"   # Add more scenes as needed
 do
-    IMP_PATH=./pruned_distilled/${SCENE}
-    INPUT_PLY_PATH=./pruned_distilled/${SCENE}/iteration_40000/point_cloud.ply
-    SAVE_PATH=./output/${SCENE}
+    IMP_PATH=./vectree/pruned_distilled/${SCENE}
+    INPUT_PLY_PATH=./vectree/pruned_distilled/${SCENE}/iteration_40000/point_cloud.ply
+    SAVE_PATH=./vectree/output/${SCENE}
 
     CMD="CUDA_VISIBLE_DEVICES=0 python vectree.py \
     --important_score_npz_path ${IMP_PATH} \

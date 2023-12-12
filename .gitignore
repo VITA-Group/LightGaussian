@@ -7,4 +7,5 @@ diff_rasterization/dist
 tensorboard_3d
 screenshots
 logs_train
-output
+vectree/pruned_distilled
+vectree/output

@@ -42,6 +42,10 @@ note: 3D-GS is trained for 20,000 iterations and then prune it. The resulting pl
 
 #### Option 2 SH distillation
 #### Option 3 VecTree Quantization
+Users can quantize a pruned and distilled 3D-GS checkpoint using the following command (default setting):
+```
+bash scripts/run_vectree_quantize.sh
+```
 
 
 ## Render
