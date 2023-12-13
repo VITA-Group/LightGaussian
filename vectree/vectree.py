@@ -8,24 +8,20 @@ from utils import read_ply_data, write_ply_data, load_vqgaussian
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="codebook based quantization")
+    parser = argparse.ArgumentParser(description="vectree quantization")
     parser.add_argument("--important_score_npz_path", type=str, default='room')
     parser.add_argument("--input_path", type=str, default='room/iteration_40000/point_cloud.ply')
     
     parser.add_argument("--save_path", type=str, default='./output/room')  
-    parser.add_argument("--importance_prune", type=float, default=1.0)
-    parser.add_argument("--importance_include", type=float, default=0.0)
     parser.add_argument("--no_load_data", type=bool, default=False)
     parser.add_argument("--no_save_ply", type=bool, default=False)
     parser.add_argument("--sh_degree", type=int, default=2)
-    parser.add_argument("--ablation", type=int, default=5) 
 
     parser.add_argument("--iteration_num", type=float, default=1000)
     parser.add_argument("--vq_ratio", type=float, default=0.6)
     parser.add_argument("--codebook_size", type=int, default=2**13)  # 2**13 = 8192
     parser.add_argument("--no_IS", type=bool, default=False)
-    parser.add_argument("--vq_way", type=str, default='half') # wage
-
+    parser.add_argument("--vq_way", type=str, default='half') 
     opt = parser.parse_args() 
     return opt
     
@@ -36,13 +32,8 @@ class Quantization():
         # ----- load ply data -----
         if opt.sh_degree == 3:
             self.sh_dim = 3+45
-
         elif opt.sh_degree == 2:
-
-            if opt.ablation == 7:
-                self.sh_dim = 3+24+8
-            else:
-                self.sh_dim = 3+24
+            self.sh_dim = 3+24
 
         self.feats = read_ply_data(opt.input_path)
         self.feats = torch.tensor(self.feats)
@@ -53,8 +44,8 @@ class Quantization():
         self.model_vq = VectorQuantize(
                     dim = self.feats.shape[1],              
                     codebook_size = opt.codebook_size,
-                    decay = 0.8,                            # specify number of quantizersse， 对应公式(9)的 λ_d
-                    commitment_weight = 1.0,                # codebook size
+                    decay = 0.8,                            
+                    commitment_weight = 1.0,                
                     use_cosine_sim = False,
                     threshold_ema_dead_code=0,
                 ).to(device)
@@ -73,24 +64,8 @@ class Quantization():
         self.no_save_ply = opt.no_save_ply
    
         self.codebook_size = opt.codebook_size
-        self.importance_prune = opt.importance_prune
-        self.importance_include = opt.importance_include
         self.iteration_num = opt.iteration_num
-
         self.vq_way = opt.vq_way
-        self.ablation = opt.ablation
-
-        if self.ablation == 5:
-            self.codebook_size = 4096*2
-        
-
-        # ----- Ablation -----
-        # 1. baseline (prune + distill过的模型)
-        # 2. baseline + fp16， size掉一半
-        # 3. baseline + codebook (4096)
-        # 4. baseline + codebook (4096x2)
-        # 5. baseline + codebook (4096x4)
-        # 6. baseline + vectree 
 
         # ----- print info -----
         print("=========================================")
@@ -125,7 +100,7 @@ class Quantization():
 
     @torch.no_grad()
     def fully_vq_reformat(self):  
-        print("start vector quantize")
+        print("Start vector quantize!")
         all_feat, all_indice = self.calc_vector_quantized_feature()
 
         if self.save_path is not None:
@@ -162,7 +137,7 @@ class Quantization():
             wage_non_vq_feats = self.wage_vq(non_vq_feats)
             np.savez_compressed(f'{save_path}/extreme_saving/non_vq_feats.npz', wage_non_vq_feats) 
 
-            # =========================================== save xyz &f other attr(opacity + 3*scale + 4*rot) ====================================
+            # =========================================== save xyz & other attr(opacity + 3*scale + 4*rot) ====================================
             other_attribute = self.feats_bak[:, -8:]
             wage_other_attribute = self.wage_vq(other_attribute)
             np.savez_compressed(f'{save_path}/extreme_saving/other_attribute.npz', wage_other_attribute)
@@ -172,7 +147,11 @@ class Quantization():
             
 
         # zip everything together to get final size
-        os.system(f"zip -r {save_path}/extreme_saving.zip {save_path}/extreme_saving")            
+        os.system(f"zip -r {save_path}/extreme_saving.zip {save_path}/extreme_saving")
+        size = os.path.getsize(f'{save_path}/extreme_saving.zip')
+        size_MB = size / 1024.0 / 1024.0
+        print("size = ", size_MB, " MB")
+            
         print("Finish vector quantize!")
         return all_feat, all_indice
     
@@ -227,13 +206,7 @@ class Quantization():
 
         #=================== Apply vector quantization ====================
         all_feat, all_indices = self.fully_vq_reformat()
-        print('\n')
-        print('\n')
-        print('\n')
-        print("output_feats: ", all_feat.shape)        
-        print("quantized succcessfully!")
-
-
+        print("Quantized succcessfully!")
 
     def dequantize(self):
         print("Load saved data:")
@@ -242,9 +215,7 @@ class Quantization():
         if self.no_save_ply == False:
             os.makedirs(f'{self.ply_path}/', exist_ok=True)
             write_ply_data(dequantized_feats.cpu().numpy(), self.ply_path, self.sh_dim)
-
-        print("dequantized_feats: ", dequantized_feats.shape)
-        print("dequantized succcessfully!")
+        print("Dequantized succcessfully!")
 
 
 
@@ -256,5 +227,5 @@ if __name__=='__main__':
     vq.quantize()
     vq.dequantize()
     
-    print("all done!!!")
+    print("All done!")
 
