@@ -58,7 +58,7 @@ python render_video.py --source_path PATH/TO/DATASET --model_path PATH/TO/MODEL 
 An example ckpt for room scene can be downloaded [here](<https://drive.google.com/drive/folders/1yJeVLQUjYR4cnROOCYuL3o4bXi9atrYH?usp=sharing>), which mainly includes the following several parts:
 
 - point_cloud.ply ——  Pruned, distilled and quantized 3D-GS checkpoint.
-- extreme_saving —— Relevant files obtained after vectree quantification.
+- extreme_saving —— Relevant files obtained after vectree quantization.
 - imp_score.npz —— Global significance used in vectree quantization.
 
 

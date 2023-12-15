@@ -68,21 +68,20 @@ class Quantization():
         self.vq_way = opt.vq_way
 
         # ----- print info -----
-        print("=========================================")
-        print("input_feats_shape: ", self.feats_bak.shape)
-        print("vq_feats_shape: ", self.feats.shape)
+        print("\n================== Print Info ================== ")
+        print("Input_feats_shape: ", self.feats_bak.shape)
+        print("VQ_feats_shape: ", self.feats.shape)
         print("SH_degree: ", opt.sh_degree)
         print("Quantization_ratio: ", opt.vq_ratio)
         print("Add_important_score: ", opt.no_IS==False)
         print("Codebook_size: ", opt.codebook_size)
-        print("=========================================")
+        print("================================================ ")
 
     @torch.no_grad()
     def calc_vector_quantized_feature(self):
         """
         apply vector quantize on feature grid and return vq indexes
         """
-        print("caculate vq features")
         CHUNK = 8192
         feat_list = []
         indice_list = []
@@ -100,7 +99,8 @@ class Quantization():
 
     @torch.no_grad()
     def fully_vq_reformat(self):  
-        print("Start vector quantize!")
+
+        print("\n=============== Start vector quantize ===============")
         all_feat, all_indice = self.calc_vector_quantized_feature()
 
         if self.save_path is not None:
@@ -150,9 +150,8 @@ class Quantization():
         os.system(f"zip -r {save_path}/extreme_saving.zip {save_path}/extreme_saving")
         size = os.path.getsize(f'{save_path}/extreme_saving.zip')
         size_MB = size / 1024.0 / 1024.0
-        print("size = ", size_MB, " MB")
+        print("Size = ", size_MB, " MB")
             
-        print("Finish vector quantize!")
         return all_feat, all_indice
     
     def load_f(self, path, name, allow_pickle=False,array_name='arr_0'):
@@ -206,17 +205,14 @@ class Quantization():
 
         #=================== Apply vector quantization ====================
         all_feat, all_indices = self.fully_vq_reformat()
-        print("Quantized succcessfully!")
 
     def dequantize(self):
-        print("Load saved data:")
+        print("\n==================== Load saved data & Dequantize ==================== ")
         dequantized_feats = load_vqgaussian(os.path.join(self.save_path,'extreme_saving'), device=device)
 
         if self.no_save_ply == False:
             os.makedirs(f'{self.ply_path}/', exist_ok=True)
             write_ply_data(dequantized_feats.cpu().numpy(), self.ply_path, self.sh_dim)
-        print("Dequantized succcessfully!")
-
 
 
 if __name__=='__main__':

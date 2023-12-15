@@ -11,7 +11,7 @@ do
     INPUT_PLY_PATH=./vectree/pruned_distilled/${SCENE}/iteration_40000/point_cloud.ply
     SAVE_PATH=./vectree/output/${SCENE}
 
-    CMD="CUDA_VISIBLE_DEVICES=0 python vectree.py \
+    CMD="CUDA_VISIBLE_DEVICES=0 python vectree/vectree.py \
     --important_score_npz_path ${IMP_PATH} \
     --input_path ${INPUT_PLY_PATH} \
     --save_path ${SAVE_PATH} \
