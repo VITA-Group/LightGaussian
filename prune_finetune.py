@@ -35,7 +35,7 @@ import random
 import copy
 import gc
 from os import makedirs
-from prune import prune_list
+from prune import prune_list, calculate_v_imp_score
 import torchvision
 from torch.optim.lr_scheduler import ExponentialLR
 import csv
@@ -203,14 +203,7 @@ def training(
                     )
                 elif args.prune_type == "v_important_score":
                     # normalize scale
-                    volume = torch.prod(gaussians.get_scaling, dim=1)
-                    index = int(len(volume) * 0.9)
-                    sorted_volume, sorted_indices = torch.sort(
-                        volume, descending=True, dim=0
-                    )
-                    kth_percent_largest = sorted_volume[index]
-                    v_list = torch.pow(volume / kth_percent_largest, args.v_pow)
-                    v_list = v_list * imp_list
+                    v_list = calculate_v_imp_score(gaussians, imp_list, args.v_pow)
                     gaussians.prune_gaussians(
                         (args.prune_decay**i) * args.prune_percent, v_list
                     )
@@ -308,7 +301,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--prune_type", type=str, default="important_score"
     )  # k_mean, farther_point_sample, important_score
-    parser.add_argument("--v_pow", type=float, default=None)
+    parser.add_argument("--v_pow", type=float, default=0.1)
     parser.add_argument("--densify_iteration", nargs="+", type=int, default=[0])
     args = parser.parse_args(sys.argv[1:])
     args.save_iterations.append(args.iterations)

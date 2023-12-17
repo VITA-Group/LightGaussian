@@ -109,6 +109,27 @@ from collections import defaultdict
 #     mask[points_to_prune] = True
 #     return mask
 
+def calculate_v_imp_score(gaussians, imp_list, v_pow):
+    """
+    :param gaussians: A data structure containing Gaussian components with a get_scaling method.
+    :param imp_list: The importance scores for each Gaussian component.
+    :param v_pow: The power to which the volume ratios are raised.
+    :return: A list of adjusted values (v_list) used for pruning.
+    """
+    # Calculate the volume of each Gaussian component
+    volume = torch.prod(gaussians.get_scaling(), dim=1)
+    # Determine the kth_percent_largest value
+    index = int(len(volume) * 0.9)
+    sorted_volume, _ = torch.sort(volume, descending=True)
+    kth_percent_largest = sorted_volume[index]
+
+    # Calculate v_list
+    v_list = torch.pow(volume / kth_percent_largest, v_pow)
+    v_list = v_list * imp_list
+    return v_list
+
+
+
 
 def prune_list(gaussians, scene, pipe, background):
     viewpoint_stack = scene.getTrainCameras().copy()

@@ -25,10 +25,11 @@ from arguments import ModelParams, PipelineParams, OptimizationParams
 # from prune_train import prepare_output_and_logger, training_report
 from icecream import ic
 from os import makedirs
-from prune import prune_list
+from prune import prune_list, calculate_v_imp_score
 import torchvision
 from torch.optim.lr_scheduler import ExponentialLR
 import csv
+import numpy as np
 
 
 try:
@@ -198,14 +199,7 @@ def training(
                 # TODO Add prunning types
                 gaussian_list, imp_list = prune_list(gaussians, scene, pipe, background)
                 i = args.prune_iterations.index(iteration)
-                volume = torch.prod(gaussians.get_scaling, dim=1)
-                index = int(len(volume) * 0.9)
-                sorted_volume, sorted_indices = torch.sort(
-                    volume, descending=True, dim=0
-                )
-                kth_percent_largest = sorted_volume[index]
-                v_list = torch.pow(volume / kth_percent_largest, args.v_pow)
-                v_list = v_list * imp_list
+                v_list = calculate_v_imp_score(gaussians, imp_list, args.v_pow)
                 gaussians.prune_gaussians(
                     (args.prune_decay**i) * args.prune_percent, v_list
                 )
@@ -225,6 +219,8 @@ def training(
                     (gaussians.capture(), iteration),
                     scene.model_path + "/chkpnt" + str(iteration) + ".pth",
                 )
+                if iteration == checkpoint_iterations[-1]:
+                    np.savez(os.path.join(scene.model_path,"imp_score"), v_list) 
 
 
 if __name__ == "__main__":
@@ -256,7 +252,7 @@ if __name__ == "__main__":
         "--prune_iterations", nargs="+", type=int, default=[16_000, 24_000]
     )
     parser.add_argument("--prune_percent", type=float, default=0.5)
-    parser.add_argument("--v_pow", type=float, default=None)
+    parser.add_argument("--v_pow", type=float, default=0.1)
     parser.add_argument("--prune_decay", type=float, default=0.8)
     args = parser.parse_args(sys.argv[1:])
     args.save_iterations.append(args.iterations)

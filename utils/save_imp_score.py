@@ -29,7 +29,7 @@ import random
 import copy
 import gc
 from os import makedirs
-from prune import prune_list, uniform_prune, HDBSCAN_prune
+from prune import prune_list, calculate_v_imp_score
 import csv
 import numpy as np
 
@@ -43,20 +43,11 @@ def save_imp_score(dataset, opt, pipe, checkpoint, args):
 
     bg_color = [1, 1, 1] if dataset.white_background else [0, 0, 0]
     background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
-
-    iteration = opt.iterations
-    ic("Prune iteration: "+str(iteration))
-    ic(len(gaussians.get_xyz))
     gaussian_list, imp_list = prune_list(gaussians, scene, pipe, background) 
-    volume = torch.prod(gaussians.get_scaling, dim = 1)
-    index = int(len(volume) * 0.9)
-    sorted_volume, sorted_indices = torch.sort(volume, descending=True, dim=0)
-    kth_percent_largest = sorted_volume[index]
-    v_list = torch.pow(volume/kth_percent_largest, args.v_pow)
-    v_list = v_list * imp_list
-    v_list = v_list.detach().cpu().numpy()
+    v_list = calculate_v_imp_score(gaussians, imp_list, args.v_pow)
     np.savez(os.path.join(scene.model_path,"imp_score"), v_list)
-    # If you want to check the imp_score:
+    
+    # If you want to print the imp_score:
     if args.show_imp_score:
         data = np.load(os.path.join(scene.model_path,"imp_score.npz"))
         lst = data.files
@@ -78,7 +69,7 @@ if __name__ == "__main__":
     parser.add_argument("--show_imp_score", action='store_true', default=False)
     parser.add_argument("--get_fps",action='store_true', default=False)
     parser.add_argument("--quiet", action="store_true")
-    parser.add_argument("--v_pow", type=float, default=None)
+    parser.add_argument("--v_pow", type=float, default=0.1)
 
 
     args = parser.parse_args(sys.argv[1:])
