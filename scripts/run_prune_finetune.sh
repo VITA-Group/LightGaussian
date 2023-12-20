@@ -69,11 +69,11 @@ for arg in "${run_args[@]}"; do
           echo "GPU $gpu_id is available. Starting prune_finetune.py with dataset '$arg', prune_percent '$prune_percent', prune_type '$prune_type', prune_decay '$prune_decay', and v_pow '$vp' on port $port"
           
           CUDA_VISIBLE_DEVICES=$gpu_id nohup python prune_finetune.py \
-            -s "PATH/TO/DATASET/$arg" \
-            -m "OUTPUT/PATH/${arg}_${prune_percent}" \
+            -s "/ssd1/zhiwen/datasets/kevin/nerf360/$arg/" \
+            -m "output3/${arg}" \
             --eval \
             --port $port \
-            --start_checkpoint "PATH/TO/CHECKPOINT/$arg/chkpnt30000.pth" \
+            --start_checkpoint "/ssd1/zhiwen/projects/compress_gaussian/output2/$arg/chkpnt30000.pth" \
             --iteration 35000 \
             --prune_percent $prune_percent \
             --prune_type $prune_type \
