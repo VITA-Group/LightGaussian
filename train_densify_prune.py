@@ -220,7 +220,9 @@ def training(
                     scene.model_path + "/chkpnt" + str(iteration) + ".pth",
                 )
                 if iteration == checkpoint_iterations[-1]:
-                    np.savez(os.path.join(scene.model_path,"imp_score"), v_list) 
+                    gaussian_list, imp_list = prune_list(gaussians, scene, pipe, background)
+                    v_list = calculate_v_imp_score(gaussians, imp_list, args.v_pow)
+                    np.savez(os.path.join(scene.model_path,"imp_score"), v_list.cpu().detach().numpy()) 
 
 
 if __name__ == "__main__":

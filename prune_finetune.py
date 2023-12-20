@@ -23,6 +23,7 @@ from tqdm import tqdm
 from utils.image_utils import psnr
 from argparse import ArgumentParser, Namespace
 from arguments import ModelParams, PipelineParams, OptimizationParams
+import numpy as np
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -67,10 +68,24 @@ def training(
     tb_writer = prepare_output_and_logger(dataset)
     gaussians = GaussianModel(dataset.sh_degree)
     scene = Scene(dataset, gaussians)
-    gaussians.training_setup(opt)
     if checkpoint:
+        gaussians.training_setup(opt)
         (model_params, first_iter) = torch.load(checkpoint)
         gaussians.restore(model_params, opt)
+    elif args.start_pointcloud:
+        gaussians.load_ply(args.start_pointcloud)
+        ic(gaussians.get_xyz.shape)
+        # ic(gaussians.optimizer.param_groups["xyz"].shape)
+        gaussians.training_setup(opt)
+        gaussians.max_radii2D = torch.zeros((gaussians.get_xyz.shape[0]), device="cuda")
+        ic("after")
+        ic(gaussians.get_xyz.shape)
+        ic(len(gaussians.optimizer.param_groups[0]['params'][0]))
+    else:
+        raise ValueError("A checkpoint file or a pointcloud is required to proceed.")
+
+        
+        
 
     bg_color = [1, 1, 1] if dataset.white_background else [0, 0, 0]
     background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
@@ -178,6 +193,12 @@ def training(
                     (gaussians.capture(), iteration),
                     scene.model_path + "/chkpnt" + str(iteration) + ".pth",
                 )
+                
+                if iteration == checkpoint_iterations[-1]:
+                    gaussian_list, imp_list = prune_list(gaussians, scene, pipe, background)
+                    v_list = calculate_v_imp_score(gaussians, imp_list, args.v_pow)
+                    np.savez(os.path.join(scene.model_path,"imp_score"), v_list.cpu().detach().numpy()) 
+
 
             training_report(
                 tb_writer,
@@ -253,14 +274,14 @@ def training(
 
                 ic("After prune iteration, number of gaussians: " + str(len(gaussians.get_xyz)))
 
-            if iteration in args.densify_iteration:
-                gaussians.max_radii2D[visibility_filter] = torch.max(
-                    gaussians.max_radii2D[visibility_filter], radii[visibility_filter]
-                )
-                gaussians.add_densification_stats(
-                    viewspace_point_tensor, visibility_filter
-                )
-                gaussians.densify(opt.densify_grad_threshold, scene.cameras_extent)
+            # if iteration in args.densify_iteration:
+            #     gaussians.max_radii2D[visibility_filter] = torch.max(
+            #         gaussians.max_radii2D[visibility_filter], radii[visibility_filter]
+            #     )
+            #     gaussians.add_densification_stats(
+            #         viewspace_point_tensor, visibility_filter
+            #     )
+            #     gaussians.densify(opt.densify_grad_threshold, scene.cameras_extent)
 
             if iteration < opt.iterations:
                 gaussians.optimizer.step()
@@ -290,13 +311,14 @@ if __name__ == "__main__":
 
     parser.add_argument("--prune_iterations", nargs="+", type=int, default=[30_001])
     parser.add_argument("--start_checkpoint", type=str, default=None)
+    parser.add_argument("--start_pointcloud", type=str, default=None)
     parser.add_argument("--prune_percent", type=float, default=0.1)
     parser.add_argument("--prune_decay", type=float, default=1)
     parser.add_argument(
         "--prune_type", type=str, default="important_score"
     )  # k_mean, farther_point_sample, important_score
     parser.add_argument("--v_pow", type=float, default=0.1)
-    parser.add_argument("--densify_iteration", nargs="+", type=int, default=[0])
+    parser.add_argument("--densify_iteration", nargs="+", type=int, default=[-1])
     args = parser.parse_args(sys.argv[1:])
     args.save_iterations.append(args.iterations)
 
