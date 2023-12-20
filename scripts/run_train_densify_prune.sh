@@ -63,13 +63,13 @@ for arg in "${run_args[@]}"; do
         if [[ -n $gpu_id ]]; then
           echo "GPU $gpu_id is available. Starting train_densify_prune.py with dataset '$arg', prune_percent '$prune_percent', prune_type '$prune_type', prune_decay '$prune_decay', and v_pow '$vp' on port $port"
           CUDA_VISIBLE_DEVICES=$gpu_id nohup python train_densify_prune.py \
-            -s "/PATH/TO/DATASET/$arg/" \
-            -m "OUTPUT/PATH/${arg}" \
-            --prune_percent prune_percent \
-            --prune_decay prune_decay \
-            --v_pow vp\
+            -s "/ssd1/zhiwen/datasets/kevin/nerf360/$arg/" \
+            -m "output3/${arg}" \
+            --prune_percent $prune_percent \
+            --prune_decay $prune_decay \
+            --v_pow $vp\
             --eval \
-            --port $port > "PATH_TO_LOGS_FOLDER/train_${arg}.log" 2>&1 &
+            --port $port > "logs/train_${arg}.log" 2>&1 &
           # you need to create the log folder first
           # Increment the port number for the next run
           ((port++))
