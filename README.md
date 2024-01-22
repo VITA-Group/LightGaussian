@@ -49,10 +49,15 @@ bash scripts/run_vectree_quantize.sh
 
 
 ## Render
+Render with trajectory. By default ellipse, you can change it to spiral or others trajectory by changing to corresponding function.
 ```
-# Render with trajectory. By default ellipse, you can change it to spiral or others trajectory by changing to corresponding function.
-python render_video.py --source_path PATH/TO/DATASET --model_path PATH/TO/MODEL --skip_train --skip_test --video 
+python render_video.py --source_path PATH/TO/DATASET --model_path PATH/TO/MODEL --skip_train --skip_test --video
 ```
+For render after the Vectree Quantization stage, you could render them through
+```
+python render_video.py --load_vq
+```
+
 
 ## Example
 An example ckpt for room scene can be downloaded [here](<https://drive.google.com/drive/folders/1yJeVLQUjYR4cnROOCYuL3o4bXi9atrYH?usp=sharing>), which mainly includes the following several parts:
