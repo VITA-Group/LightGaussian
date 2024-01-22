@@ -27,7 +27,7 @@ declare -a run_args=(
 
 # activate psudo view, else using train view for distillation 
 declare -a virtue_view_arg=(
-  "--virtual_view"
+  "--augmented_view"
   ""
 )
 # compress_gaussian/output5_prune_final_result/bicycle_v_important_score_oneshot_prune_densify0.67_vpow0.1_try3_decay1
