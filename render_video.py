@@ -140,8 +140,7 @@ def gaussian_render(model_path, iteration, views, gaussians, pipeline, backgroun
 def render_sets(dataset : ModelParams, iteration : int, pipeline : PipelineParams, skip_train : bool, skip_test : bool, video: bool, circular:bool, radius: float, args):
     with torch.no_grad():
         gaussians = GaussianModel(dataset.sh_degree)
-        scene = Scene(dataset, gaussians, load_iteration=iteration, shuffle=False)
-
+        scene = Scene(dataset, gaussians, load_iteration=iteration, shuffle=False, load_vq= args.load_vq)
         bg_color = [1,1,1] if dataset.white_background else [0, 0, 0]
         background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
 
@@ -176,6 +175,7 @@ if __name__ == "__main__":
     parser.add_argument("--gaussians", action="store_true")
     parser.add_argument("--mean", default=0, type=float)
     parser.add_argument("--std", default=0.03, type=float)
+    parser.add_argument("--load_vq", action="store_true")
     args = get_combined_args(parser)
     print("Rendering " + args.model_path)
 

@@ -21,8 +21,7 @@ from utils.camera_utils import cameraList_from_camInfos, camera_to_JSON
 
 class Scene:
     gaussians: GaussianModel
-
-    # modify
+    # modified
     def __init__(
         self,
         args: ModelParams,
@@ -31,6 +30,7 @@ class Scene:
         shuffle=True,
         resolution_scales=[1.0],
         new_sh=0,
+        load_vq=False
     ):
         """b
         :param path: Path to colmap scene main folder.
@@ -99,7 +99,10 @@ class Scene:
             self.test_cameras[resolution_scale] = cameraList_from_camInfos(
                 scene_info.test_cameras, resolution_scale, args
             )
-        if new_sh != 0 and self.loaded_iter:
+        if load_vq:
+            self.gaussians.load_vq(self.model_path)
+            
+        elif new_sh != 0 and self.loaded_iter:
             self.gaussians.load_ply_sh(
                 os.path.join(
                     self.model_path,

@@ -21,6 +21,7 @@ from simple_knn._C import distCUDA2
 from utils.graphics_utils import BasicPointCloud
 from utils.general_utils import strip_symmetric, build_scaling_rotation
 from icecream import ic
+from vectree.utils import load_vqgaussian, write_ply_data
 
 
 class GaussianModel:
@@ -124,6 +125,15 @@ class GaussianModel:
     def oneupSHdegree(self):
         if self.active_sh_degree < self.max_sh_degree:
             self.active_sh_degree += 1
+            
+    def onedownSHdegree(self):
+        if self.active_sh_degree > self.max_sh_degree:
+            self.active_sh_degree -= 1
+            num_coeffs_to_keep = (self.active_sh_degree + 1) ** 2 - 1
+        ic(num_coeffs_to_keep)
+        self._features_rest = self._features_rest.clone().detach()
+        self._features_rest = self._features_rest[:,:num_coeffs_to_keep,:]
+        self._features_rest.requires_grad = True
 
     def create_from_pcd(self, pcd: BasicPointCloud, spatial_lr_scale: float):
         self.spatial_lr_scale = spatial_lr_scale
@@ -405,10 +415,57 @@ class GaussianModel:
             torch.tensor(rots, dtype=torch.float, device="cuda").requires_grad_(True)
         )
         self.active_sh_degree = new_sh
+        
+        
+    def load_vq(self, path):
+        # can't load from zip folder
+        dequantized_feats = load_vqgaussian(os.path.join(path,'extreme_saving')).cpu().numpy()
+        sh_dim = 3*(self.max_sh_degree + 1) ** 2 - 3 
+        self.active_sh_degree = self.max_sh_degree
+        # ic("in load_vq")
+        # 24 for degree 2, and 45 for degree 3
+        # abc = dequantized_feats[:, 0:3]
+        
+        xyz = dequantized_feats[:, 0:3]
+        features_dc = dequantized_feats[:, 6:9]
+        features_dc = features_dc.reshape((features_dc.shape[0],3,1))
+        
+        extra_f_names = dequantized_feats[:, 9:9+sh_dim]
+        extra_f_names = extra_f_names.reshape((features_dc.shape[0],3,sh_dim//3))
+        
+        self._xyz = nn.Parameter(
+            torch.tensor(dequantized_feats[:, 0:3], dtype=torch.float, device="cuda").requires_grad_(True)
+        ) 
+        self._features_dc = nn.Parameter(
+            torch.tensor(features_dc, dtype=torch.float, device="cuda")
+            .transpose(1, 2)
+            .contiguous()
+            .requires_grad_(True)
+        )
+        self._features_rest = nn.Parameter(
+            torch.tensor(extra_f_names, dtype=torch.float, device="cuda")
+            .transpose(1, 2)
+            .contiguous()
+            .requires_grad_(True)
+        )
+        self._opacity = nn.Parameter(
+            torch.tensor(dequantized_feats[:,-8:-7], dtype=torch.float, device="cuda").requires_grad_(
+                True
+            )
+        )
+        self._scaling = nn.Parameter(
+            torch.tensor(dequantized_feats[:,-7:-4], dtype=torch.float, device="cuda").requires_grad_(True)
+        )
+        self._rotation = nn.Parameter(
+            torch.tensor(dequantized_feats[:,-4:], dtype=torch.float, device="cuda").requires_grad_(True)
+        )
+        
+        
+    
+        
 
     def load_ply(self, path):
         plydata = PlyData.read(path)
-
         xyz = np.stack(
             (
                 np.asarray(plydata.elements[0]["x"]),
@@ -722,7 +779,6 @@ class GaussianModel:
         index_nth_percentile = int(percent * (sorted_tensor.shape[0] - 1))
         value_nth_percentile = sorted_tensor[index_nth_percentile]
         prune_mask = (import_score <= value_nth_percentile).squeeze()
-        # TODO(Kevin) Emergent, change it back. This is just for testing
         self.prune_points(prune_mask)
 
     def add_densification_stats(self, viewspace_point_tensor, update_filter):
