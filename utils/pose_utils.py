@@ -389,15 +389,76 @@ def generate_spherify_path(views):
     new_poses = np.stack(new_poses, 0)
     return new_poses
 
-def gaussain_poses(viewpoint_cam, mean =0, std_dev = 0.03):
-    translate_x = np.random.normal(mean, std_dev)
-    translate_y = np.random.normal(mean, std_dev)
-    translate_z = np.random.normal(mean, std_dev)
+# def gaussian_poses(viewpoint_cam, mean =0, std_dev = 0.03):
+#     translate_x = np.random.normal(mean, std_dev)
+#     translate_y = np.random.normal(mean, std_dev)
+#     translate_z = np.random.normal(mean, std_dev)
+#     translate = np.array([translate_x, translate_y, translate_z])
+#     viewpoint_cam.world_view_transform = torch.tensor(getWorld2View2(viewpoint_cam.R, viewpoint_cam.T, translate)).transpose(0, 1).cuda()
+#     viewpoint_cam.full_proj_transform = (viewpoint_cam.world_view_transform.unsqueeze(0).bmm(viewpoint_cam.projection_matrix.unsqueeze(0))).squeeze(0)
+#     viewpoint_cam.camera_center = viewpoint_cam.world_view_transform.inverse()[3, :3]
+#     return viewpoint_cam
+
+def get_rotation_matrix(axis, angle):
+    """
+    Create a rotation matrix for a given axis (x, y, or z) and angle.
+    """
+    axis = axis.lower()
+    cos_angle = np.cos(angle)
+    sin_angle = np.sin(angle)
+
+    if axis == 'x':
+        return np.array([
+            [1, 0, 0],
+            [0, cos_angle, -sin_angle],
+            [0, sin_angle, cos_angle]
+        ])
+    elif axis == 'y':
+        return np.array([
+            [cos_angle, 0, sin_angle],
+            [0, 1, 0],
+            [-sin_angle, 0, cos_angle]
+        ])
+    elif axis == 'z':
+        return np.array([
+            [cos_angle, -sin_angle, 0],
+            [sin_angle, cos_angle, 0],
+            [0, 0, 1]
+        ])
+    else:
+        raise ValueError("Invalid axis. Choose from 'x', 'y', 'z'.")
+
+
+
+def gaussian_poses(viewpoint_cam, mean=0, std_dev_translation=0.03, std_dev_rotation=0.01):
+    # Translation Perturbation
+    translate_x = np.random.normal(mean, std_dev_translation)
+    translate_y = np.random.normal(mean, std_dev_translation)
+    translate_z = np.random.normal(mean, std_dev_translation)
     translate = np.array([translate_x, translate_y, translate_z])
-    viewpoint_cam.world_view_transform = torch.tensor(getWorld2View2(viewpoint_cam.R, viewpoint_cam.T, translate)).transpose(0, 1).cuda()
+
+    # Rotation Perturbation
+    angle_x = np.random.normal(mean, std_dev_rotation)
+    angle_y = np.random.normal(mean, std_dev_rotation)
+    angle_z = np.random.normal(mean, std_dev_rotation)
+
+    rot_x = get_rotation_matrix('x', angle_x)
+    rot_y = get_rotation_matrix('y', angle_y)
+    rot_z = get_rotation_matrix('z', angle_z)
+
+    # Combined Rotation Matrix
+    combined_rot = np.matmul(rot_z, np.matmul(rot_y, rot_x))
+
+    # Apply Rotation to Camera
+    rotated_R = np.matmul(viewpoint_cam.R, combined_rot)
+
+    # Update Camera Transformation
+    viewpoint_cam.world_view_transform = torch.tensor(getWorld2View2(rotated_R, viewpoint_cam.T, translate)).transpose(0, 1).cuda()
     viewpoint_cam.full_proj_transform = (viewpoint_cam.world_view_transform.unsqueeze(0).bmm(viewpoint_cam.projection_matrix.unsqueeze(0))).squeeze(0)
     viewpoint_cam.camera_center = viewpoint_cam.world_view_transform.inverse()[3, :3]
+
     return viewpoint_cam
+
 
 
 def circular_poses(viewpoint_cam, radius, angle=0.0):
@@ -434,7 +495,6 @@ def generate_spherical_sample_path(views, azimuthal_rots=1, polar_rots=0.75, N=1
     # Modify this loop to include phi
     for theta in np.linspace(0.0, 2.0 * np.pi * azimuthal_rots, N + 1)[:-1]:
         for phi in np.linspace(0.0, np.pi * polar_rots, N + 1)[:-1]:
-            
             # Modify these lines to use spherical coordinates for c
             c = np.dot(
                 c2w[:3, :4],

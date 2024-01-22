@@ -68,18 +68,21 @@ for arg in "${run_args[@]}"; do
         if [[ -n $gpu_id ]]; then
           echo "GPU $gpu_id is available. Starting prune_finetune.py with dataset '$arg', prune_percent '$prune_percent', prune_type '$prune_type', prune_decay '$prune_decay', and v_pow '$vp' on port $port"
           
-          CUDA_VISIBLE_DEVICES=$gpu_id nohup python prune_finetune.py \
-            -s "PATH/TO/DATASET/$arg" \
-            -m "OUTPUT/PATH/${arg}_${prune_percent}" \
+          CUDA_VISIBLE_DEVICES=$gpu_id python prune_finetune.py \
+            -s "/ssd1/zhiwen/datasets/drone/UTTOWERDATA" \
+            -m "output_drone" \
             --eval \
             --port $port \
-            --start_checkpoint "PATH/TO/CHECKPOINT/$arg/chkpnt30000.pth" \
-            --iteration 35000 \
+            --start_pointcloud "/ssd1/zhiwen/tmp/UTTOWERDATA_v2024.1.18_BATorlerance0/point_cloud/iteration_30000/point_cloud.ply" \
+            --iteration 5000 \
+            --test_iterations 2 5000 \
+            --save_iterations 5000 \
+            --checkpoint_iterations 5000 \
+            --prune_iterations 2 \
             --prune_percent $prune_percent \
             --prune_type $prune_type \
             --prune_decay $prune_decay \
-            --position_lr_max_steps 35000 \
-            --v_pow $vp > "logs_prune/${arg}${prune_percent}prunned.log" 2>&1 &
+            --v_pow $vp > "logs_prune/drone_${prune_percent}prunned.log" 2>&1 &
 
           # Increment the port number for the next run
           ((port++))

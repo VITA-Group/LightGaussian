@@ -25,7 +25,7 @@ from icecream import ic
 import copy
 
 from utils.graphics_utils import getWorld2View2
-from utils.pose_utils import generate_ellipse_path, generate_spherical_sample_path, generate_spiral_path, generate_spherify_path,  gaussain_poses, circular_poses
+from utils.pose_utils import generate_ellipse_path, generate_spherical_sample_path, generate_spiral_path, generate_spherify_path,  gaussian_poses, circular_poses
 # import stepfun 
 
 
@@ -132,7 +132,7 @@ def gaussian_render(model_path, iteration, views, gaussians, pipeline, backgroun
         torchvision.utils.save_image(rendering, os.path.join(sub_path, "gt"+'{0:05d}'.format(i) + ".png"))
         for j in range(10):
             n_view = copy.deepcopy(view)
-            g_view = gaussain_poses(n_view, args.mean, args.std)
+            g_view = gaussian_poses(n_view, args.mean, args.std)
             rendering = render(g_view, gaussians, pipeline, background)["render"]
             torchvision.utils.save_image(rendering, os.path.join(sub_path, '{0:05d}'.format(j) + ".png"))
 

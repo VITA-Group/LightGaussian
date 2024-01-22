@@ -78,9 +78,7 @@ def training(
         # ic(gaussians.optimizer.param_groups["xyz"].shape)
         gaussians.training_setup(opt)
         gaussians.max_radii2D = torch.zeros((gaussians.get_xyz.shape[0]), device="cuda")
-        ic("after")
-        ic(gaussians.get_xyz.shape)
-        ic(len(gaussians.optimizer.param_groups[0]['params'][0]))
+        
     else:
         raise ValueError("A checkpoint file or a pointcloud is required to proceed.")
 
@@ -282,6 +280,10 @@ def training(
             #         viewspace_point_tensor, visibility_filter
             #     )
             #     gaussians.densify(opt.densify_grad_threshold, scene.cameras_extent)
+            
+                ic("after")
+                ic(gaussians.get_xyz.shape)
+                ic(len(gaussians.optimizer.param_groups[0]['params'][0]))
 
             if iteration < opt.iterations:
                 gaussians.optimizer.step()

@@ -9,8 +9,8 @@ get_available_gpu() {
 }
 
 # Initial port number
-port=6041
-
+port=6045
+# This is an example script to load from ply file.
 # Only one dataset specified here, but you could run multiple
 declare -a run_args=(
     "bicycle"
@@ -35,7 +35,7 @@ declare -a run_args=(
 
 # Prune percentages and corresponding decays, volume power
 declare -a prune_percents=(0.66)
-# decay rate for the following prune. The 2nd prune would prune out 0.5 x 0.6 = 0.3 of the remaining gaussian
+# decay rate for the following prune
 declare -a prune_decays=(1)
 # The volumetric importance power. The higher it is the more weight the volume is in the Global significant
 declare -a v_pow=(0.1)
@@ -53,7 +53,7 @@ if [ "${#prune_percents[@]}" -ne "${#prune_decays[@]}" ] || [ "${#prune_percents
   echo "The lengths of prune_percents, prune_decays, and v_pow arrays do not match."
   exit 1
 fi
-
+# /ssd1/zhiwen/projects/compress_gaussian/output2/bicycle/point_cloud/iteration_30000/point_cloud.ply
 # Loop over the arguments array
 for arg in "${run_args[@]}"; do
   for i in "${!prune_percents[@]}"; do
@@ -68,18 +68,22 @@ for arg in "${run_args[@]}"; do
         if [[ -n $gpu_id ]]; then
           echo "GPU $gpu_id is available. Starting prune_finetune.py with dataset '$arg', prune_percent '$prune_percent', prune_type '$prune_type', prune_decay '$prune_decay', and v_pow '$vp' on port $port"
           
-          CUDA_VISIBLE_DEVICES=$gpu_id nohup python prune_finetune.py \
+          CUDA_VISIBLE_DEVICES=$gpu_id python prune_finetune.py \
             -s "PATH/TO/DATASET/$arg" \
             -m "OUTPUT/PATH/${arg}_${prune_percent}" \
             --eval \
             --port $port \
-            --start_checkpoint "PATH/TO/CHECKPOINT/$arg/chkpnt30000.pth" \
-            --iteration 35000 \
+            --start_pointcloud "PATH/TO/CHECKPOINT/$arg/point_cloud/iteration_30000/point_cloud.ply" \
+            --iteration 5000 \
+            --test_iterations 5000 \
+            --save_iterations 5000 \
+            --prune_iterations 2 \
             --prune_percent $prune_percent \
             --prune_type $prune_type \
             --prune_decay $prune_decay \
-            --position_lr_max_steps 35000 \
-            --v_pow $vp > "logs_prune/${arg}${prune_percent}prunned.log" 2>&1 &
+            --self.position_lr_init 0.000005 \
+            --position_lr_max_steps 5000 \
+            --v_pow $vp > "logs_prune/${arg}${prune_percent}_ply_prune2.log" 2>&1 &
 
           # Increment the port number for the next run
           ((port++))

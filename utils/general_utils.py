@@ -149,3 +149,25 @@ def safe_state(silent):
     np.random.seed(0)
     torch.manual_seed(0)
     torch.cuda.set_device(torch.device("cuda:0"))
+
+
+class CircularTensor:
+    def __init__(self, max_size):
+        self.buffer = torch.empty(max_size)
+        self.max_size = max_size
+        self.current_pos = 0
+        self.current_size = 0  # Tracks the number of elements added
+
+    def add(self, element):
+        self.buffer[self.current_pos] = element
+        self.current_pos = (self.current_pos + 1) % self.max_size
+        if self.current_size < self.max_size:
+            self.current_size += 1
+
+    def get(self, index):
+        if index >= self.current_size:
+            raise IndexError("Index out of bounds")
+        return self.buffer[index]
+
+    def size(self):
+        return self.current_size
