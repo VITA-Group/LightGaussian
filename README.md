@@ -33,7 +33,7 @@ Users can directly prune a trained 3D-GS checkpoint using the following command 
 bash scripts/run_prune_finetune.sh
 ```
 
-One can also train from scratch and jointly prune redundant Gaussians in training using the following command (different setting from the paper):
+Users can also train from scratch and jointly prune redundant Gaussians in training using the following command (different setting from the paper):
 ```
 bash scripts/run_train_densify_prune.sh
 ```
@@ -41,6 +41,11 @@ note: 3D-GS is trained for 20,000 iterations and then prune it. The resulting pl
 
 
 #### Option 2 SH distillation
+Users can distill 3D-GS checkpoint using the following command (default setting):
+```
+bash scripts/run_distill_finetune.sh
+```
+
 #### Option 3 VecTree Quantization
 Users can quantize a pruned and distilled 3D-GS checkpoint using the following command (default setting):
 ```
@@ -70,7 +75,7 @@ An example ckpt for room scene can be downloaded [here](<https://drive.google.co
 
 ## TODO List
 - [x] Upload module 1: Prune & recovery 
-- [ ] Upload module 2: SH distillation
+- [x] Upload module 2: SH distillation
 - [x] Upload module 3: Vectree Quantization
 - [ ] Upload docker image 
 
