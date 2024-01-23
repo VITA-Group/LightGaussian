@@ -30,7 +30,7 @@ import random
 import copy
 import json
 import numpy as np
-from prune_train import prepare_output_and_logger, training_report
+from utils.logger_utils import prepare_output_and_logger, training_report
 from torch.optim.lr_scheduler import ExponentialLR
 
 try:
@@ -128,7 +128,7 @@ def training(args, dataset, opt, pipe, testing_iterations, saving_iterations, ch
             pipe.debug = True
 
 
-        if args.augmented_view:
+        if args.augmented_view and iteration % 2 == 0:
             viewpoint_cam = gaussian_poses(viewpoint_cam, mean= 0, std_dev_translation=0.05, std_dev_rotation=0)
             student_render_pkg = render(viewpoint_cam, student_gaussians, pipe, background)
             student_image = student_render_pkg["render"]
@@ -137,8 +137,8 @@ def training(args, dataset, opt, pipe, testing_iterations, saving_iterations, ch
         else:
             render_pkg = render(viewpoint_cam, student_gaussians, pipe, background)
             student_image = render_pkg["render"]
-            teacher_image = render(viewpoint_cam, teacher_gaussians, pipe, background)["render"].detach() 
-        
+            # teacher_image = render(viewpoint_cam, teacher_gaussians, pipe, background)["render"].detach() 
+            teacher_image = viewpoint_cam.original_image.cuda()
         Ll1 = l1_loss(student_image, teacher_image)
         # Ll1 = img2mse(student_image, teacher_image)
 
