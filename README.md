@@ -5,8 +5,6 @@
 <img src="https://lightgaussian.github.io/static/images/teaser.png" height="250"/>
 </div>
 
-Our complete codebase will be released within two weeks.
-
 ## Setup
 #### Local Setup
 The codebase is based on [gaussian-splatting](https://github.com/graphdeco-inria/gaussian-splatting)
