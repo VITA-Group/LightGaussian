@@ -15,13 +15,13 @@ port=6035
 
 # Only one dataset specified here
 declare -a run_args=(
-    # "bicycle"
+    "bicycle"
     # "bonsai"
     # "counter"
     # "kitchen"
     # "room"
     # "stump"
-    "garden"
+    # "garden"
     # "train"
     # "truck"
   )
@@ -63,8 +63,8 @@ for arg in "${run_args[@]}"; do
         if [[ -n $gpu_id ]]; then
           echo "GPU $gpu_id is available. Starting train_densify_prune.py with dataset '$arg', prune_percent '$prune_percent', prune_type '$prune_type', prune_decay '$prune_decay', and v_pow '$vp' on port $port"
           CUDA_VISIBLE_DEVICES=$gpu_id nohup python train_densify_prune.py \
-            -s "/ssd1/zhiwen/datasets/kevin/nerf360/$arg/" \
-            -m "output3/${arg}" \
+            -s "PATH/TO/DATASET/$arg" \
+            -m "OUTPUT/PATH/${arg}" \
             --prune_percent $prune_percent \
             --prune_decay $prune_decay \
             --v_pow $vp\
