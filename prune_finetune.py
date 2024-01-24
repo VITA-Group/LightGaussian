@@ -43,7 +43,6 @@ import csv
 from utils.logger_utils import training_report, prepare_output_and_logger
 
 
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 to_tensor = (
     lambda x: x.to("cuda")
     if isinstance(x, torch.Tensor)
@@ -240,7 +239,7 @@ def training(
                         (args.prune_decay**i) * args.prune_percent,
                         gaussians.get_opacity.detach(),
                     )
-                # TODO(release different prunning method)
+                # TODO(release different pruning method)
                 # elif args.prune_type == "HDBSCAN":
                 #     masks = HDBSCAN_prune(gaussians, imp_list, (args.prune_decay**i)*args.prune_percent)
                 #     gaussians.prune_points(masks)
@@ -268,7 +267,7 @@ def training(
                 # if (iteration in args.opacity_prune_iterations):
                 #         gaussians.prune_opacity(0.05)
                 else:
-                    raise Exception("Unsupportive prunning method")
+                    raise Exception("Unsupportive pruning method")
 
                 ic("After prune iteration, number of gaussians: " + str(len(gaussians.get_xyz)))
 
