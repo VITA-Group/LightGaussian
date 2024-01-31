@@ -80,7 +80,7 @@ class Quantization():
     @torch.no_grad()
     def calc_vector_quantized_feature(self):
         """
-        apply vector quantize on feature grid and return vq indexes
+        apply vector quantize on gaussian attributes and return vq indexes
         """
         CHUNK = 8192
         feat_list = []
@@ -143,14 +143,14 @@ class Quantization():
             np.savez_compressed(f'{save_path}/extreme_saving/other_attribute.npz', wage_other_attribute)
 
             xyz = self.feats_bak[:, 0:3]
-            np.savez_compressed(f'{save_path}/extreme_saving/xyz.npz', xyz)  # octreed based compression will be updated 
+            np.savez_compressed(f'{save_path}/extreme_saving/xyz.npz', xyz)  
             
 
         # zip everything together to get final size
         os.system(f"zip -r {save_path}/extreme_saving.zip {save_path}/extreme_saving")
         size = os.path.getsize(f'{save_path}/extreme_saving.zip')
         size_MB = size / 1024.0 / 1024.0
-        print("Size = ", size_MB, " MB")
+        print("Size = {:.2f} MB".format(size_MB))
             
         return all_feat, all_indice
     
@@ -184,7 +184,7 @@ class Quantization():
         IS_percent = IS_non_vq_point/IS_all_point
         print("IS_percent: ", IS_percent)
 
-        #=================== Codebook initialization ====================
+        #=================== Codebook initialization & Update codebook ====================
         self.model_vq.train()
         with torch.no_grad():
             self.vq_mask = torch.logical_xor(self.all_one_mask, self.non_vq_mask)                  
