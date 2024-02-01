@@ -1,6 +1,13 @@
 # LightGaussian: Unbounded 3D Gaussian Compression with 15x Reduction and 200+ FPS
 
-[Project Page](https://lightgaussian.github.io) | [Video](https://youtu.be/470hul75bSM) | [Paper](https://lightgaussian.github.io/static/paper/LightGaussian_arxiv.pdf) | [Arxiv](https://arxiv.org/abs/2311.17245)
+<p align="center">
+<a href="https://github.com/VITA-Group/LightGaussian"><img src="https://img.shields.io/github/stars/VITA-Group/LightGaussian"></a>
+<a href="https://lightgaussian.github.io/"><img src="https://img.shields.io/badge/Project-Page-048C3D"></a>
+<a href="https://youtu.be/470hul75bSM"><img src="https://img.shields.io/badge/Video-Youtube-FF0000.svg"></a>
+<a href="https://arxiv.org/abs/2311.17245"><img src="https://img.shields.io/badge/Arxiv-2311.17245-B31B1B.svg"></a>
+</p>
+
+<!-- [Project Page](https://lightgaussian.github.io) | [Video](https://youtu.be/470hul75bSM) | [Paper](https://lightgaussian.github.io/static/paper/LightGaussian_arxiv.pdf) | [Arxiv](https://arxiv.org/abs/2311.17245) -->
 <div>
 <img src="https://lightgaussian.github.io/static/images/teaser.png" height="250"/>
 </div>
