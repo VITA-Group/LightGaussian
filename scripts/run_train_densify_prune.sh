@@ -27,7 +27,7 @@ declare -a run_args=(
   )
 
 # prune percentage for the first prune
-declare -a prune_percents=(0.5) 
+declare -a prune_percents=(0.6) 
 # decay rate for the following prune. The 2nd prune would prune out 0.5 x 0.6 = 0.3 of the remaining gaussian
 declare -a prune_decays=(0.6)  
 # The volumetric importance power. The higher it is the more weight the volume is in the Global significant
@@ -67,6 +67,7 @@ for arg in "${run_args[@]}"; do
             -m "OUTPUT/PATH/${arg}" \
             --prune_percent $prune_percent \
             --prune_decay $prune_decay \
+            --prune_iterations 20000 \
             --v_pow $vp\
             --eval \
             --port $port > "logs/train_${arg}.log" 2>&1 &
