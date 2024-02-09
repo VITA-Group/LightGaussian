@@ -13,7 +13,7 @@
 </div>
 
 ## User Guidance
-#### Gaussian Prune Raio, Vector Quantization Ratio vs. FPS, SSIM
+#### Gaussian Prune Ratio, Vector Quantization Ratio vs. FPS, SSIM
 <div>
 <img src="https://raw.githubusercontent.com/VITA-Group/LightGaussian/main/static/prune_ratio_vs_ssim.svg" height="250"/>
 </div>
