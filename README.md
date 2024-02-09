@@ -18,7 +18,7 @@
 <img src="https://raw.githubusercontent.com/VITA-Group/LightGaussian/main/static/prune_ratio_vs_ssim.svg" height="250"/>
 </div>
 
-#### Mild Compression Ratio, with Minimum Cccuracy Degradation
+#### Mild Compression Ratio, with Minimum Accuracy Degradation
 <div>
 <img src="https://github.com/VITA-Group/LightGaussian/blob/main/static/table5.png?raw=true" height="300"/>
 </div>
