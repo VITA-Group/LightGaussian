@@ -3,7 +3,7 @@
 # GRAPHDECO research group, https://team.inria.fr/graphdeco
 # All rights reserved.
 #
-# This software is free for non-commercial, research and evaluation use 
+# This software is free for non-commercial, research and evaluation use
 # under the terms of the LICENSE.md file.
 #
 # For inquiries contact  george.drettakis@inria.fr
@@ -32,6 +32,8 @@ import json
 import numpy as np
 from utils.logger_utils import prepare_output_and_logger, training_report
 from torch.optim.lr_scheduler import ExponentialLR
+from prune import prune_list, calculate_v_imp_score
+
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -49,7 +51,7 @@ class NumpyArrayEncoder(json.JSONEncoder):
             return obj.tolist()
         else:
             return super(NumpyArrayEncoder, self).default(obj)
-        
+
 
 to_tensor = lambda x: x.to("cuda") if isinstance(
     x, torch.Tensor) else torch.Tensor(x).to("cuda")
@@ -64,7 +66,7 @@ def training(args, dataset, opt, pipe, testing_iterations, saving_iterations, ch
     with torch.no_grad():
         teacher_gaussians = GaussianModel(old_sh_degree) 
         # teacher_gaussians.training_setup(opt)
-    
+
     student_gaussians = GaussianModel(old_sh_degree)
     student_scene = Scene(dataset, student_gaussians)
 
@@ -83,7 +85,7 @@ def training(args, dataset, opt, pipe, testing_iterations, saving_iterations, ch
         student_gaussians._rotation.requires_grad = False
     if (not args.enable_opacity):
         student_gaussians._opacity.requires_grad = False
-        
+
     teacher_gaussians.optimizer = None
     bg_color = [1, 1, 1] if dataset.white_background else [0, 0, 0]
     background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
@@ -118,7 +120,7 @@ def training(args, dataset, opt, pipe, testing_iterations, saving_iterations, ch
         if iteration % 500 == 0:
             # student_gaussians.oneupSHdegree()
             student_gaussians.scheduler.step()
-        
+
         if not viewpoint_stack:
             viewpoint_stack = student_scene.getTrainCameras().copy()
         viewpoint_cam_org = viewpoint_stack.pop(randint(0, len(viewpoint_stack)-1))
@@ -126,8 +128,8 @@ def training(args, dataset, opt, pipe, testing_iterations, saving_iterations, ch
 
         if (iteration - 1) == debug_from:
             pipe.debug = True
-            
-        if args.augmented_view:
+
+        if args.augmented_view and iteration%3:
             viewpoint_cam = gaussian_poses(viewpoint_cam, mean= 0, std_dev_translation=0.05, std_dev_rotation=0)
             student_render_pkg = render(viewpoint_cam, student_gaussians, pipe, background)
             student_image = student_render_pkg["render"]
@@ -169,6 +171,16 @@ def training(args, dataset, opt, pipe, testing_iterations, saving_iterations, ch
                     os.makedirs(student_scene.model_path)
                 torch.save((student_gaussians.capture(), iteration), student_scene.model_path + "/chkpnt" + str(iteration) + ".pth")
 
+                if iteration == checkpoint_iterations[-1]:
+                    print("Saving Imp_score")
+                    gaussian_list, imp_list = prune_list(
+                        student_gaussians, student_scene, pipe, background
+                    )
+                    v_list = calculate_v_imp_score(student_gaussians, imp_list, 0.1)
+                    np.savez(
+                        os.path.join(student_scene.model_path, "imp_score"),
+                        v_list.cpu().detach().numpy(),
+                    )
 
 
 if __name__ == "__main__":
