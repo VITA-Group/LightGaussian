@@ -14,14 +14,14 @@ port=6025
 # Datasets
 declare -a run_args=(
     "bicycle"
-    # "bonsai"
-    # "counter"
-    # "kitchen"
-    # "room"
-    # "stump"
-    # "garden"
-    #  "train"
-    # "truck"
+    "bonsai"
+    "counter"
+    "kitchen"
+    "room"
+    "stump"
+    "garden"
+     "train"
+    "truck"
 )
 
 

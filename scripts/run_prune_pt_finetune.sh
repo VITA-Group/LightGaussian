@@ -81,7 +81,7 @@ for arg in "${run_args[@]}"; do
             --prune_percent $prune_percent \
             --prune_type $prune_type \
             --prune_decay $prune_decay \
-            --self.position_lr_init 0.000005 \
+            --position_lr_init 0.000005 \
             --position_lr_max_steps 5000 \
             --v_pow $vp > "logs_prune/${arg}${prune_percent}_ply_prune2.log" 2>&1 &
 
