@@ -81,7 +81,7 @@ for arg in "${run_args[@]}"; do
           echo "No GPU available at the moment. Retrying in 1 minute."
           sleep 60
         fi
-        done
+
         
       done  # End loop over v_pow values
     done
