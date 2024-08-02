@@ -10,6 +10,7 @@ from utils.image_utils import psnr
 from argparse import Namespace
 from icecream import ic
 import csv
+import torchvision
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -109,6 +110,8 @@ def training_report(
                         0.0,
                         1.0,
                     )
+                    # delete
+                    image = torch.nan_to_num(image, nan=0.0)
                     gt_image = torch.clamp(
                         viewpoint.original_image.to("cuda"), 0.0, 1.0
                     )
@@ -130,7 +133,14 @@ def training_report(
                     psnr_test += psnr(image, gt_image).mean().double()
                     ssim_test += ssim(image, gt_image).mean().double()
                     lpips_test += lpips(image, gt_image, net_type="vgg").mean().double()
+                    # print(image)
+                    # print("------------------------------")
+                    # print(gt_image)
+                    # print("mean", psnr(image, gt_image))
+                    # break
+                    # print("psnr: ", psnr(image, gt_image).mean().double())
 
+                # print("mean: ", psnr_test)
                 psnr_test /= len(config["cameras"])
                 l1_test /= len(config["cameras"])
                 ssim_test /= len(config["cameras"])

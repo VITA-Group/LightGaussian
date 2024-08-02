@@ -429,31 +429,42 @@ def get_rotation_matrix(axis, angle):
         raise ValueError("Invalid axis. Choose from 'x', 'y', 'z'.")
 
 
+# version 2
+# def gaussian_poses(viewpoint_cam, mean =0, std_dev = 0.5):
+#     # translate_x = np.random.normal(mean, std_dev)
+#     # translate_y = np.random.normal(mean, std_dev)
+#     # translate_z = np.random.normal(mean, std_dev)
+#     translate = np.array([std_dev, std_dev, std_dev])
+#     viewpoint_cam.world_view_transform = torch.tensor(getWorld2View2(viewpoint_cam.R, viewpoint_cam.T + translate, viewpoint_cam.trans)).transpose(0, 1).cuda()
+#     viewpoint_cam.full_proj_transform = (viewpoint_cam.world_view_transform.unsqueeze(0).bmm(viewpoint_cam.projection_matrix.unsqueeze(0))).squeeze(0)
+#     viewpoint_cam.camera_center = viewpoint_cam.world_view_transform.inverse()[3, :3]
+#     return viewpoint_cam
 
-def gaussian_poses(viewpoint_cam, mean=0, std_dev_translation=0.03, std_dev_rotation=0.01):
+# version 1
+def gaussian_poses(viewpoint_cam, mean=0, std_dev_translation = 0.5, std_dev_rotation=0.01):
     # Translation Perturbation
-    translate_x = np.random.normal(mean, std_dev_translation)
-    translate_y = np.random.normal(mean, std_dev_translation)
-    translate_z = np.random.normal(mean, std_dev_translation)
-    translate = np.array([translate_x, translate_y, translate_z])
+    # translate_x = np.random.normal(mean, std_dev_translation)
+    # translate_y = np.random.normal(mean, std_dev_translation)
+    # translate_z = np.random.normal(mean, std_dev_translation)
+    translate = np.array([std_dev_translation, std_dev_translation, std_dev_translation])
 
     # Rotation Perturbation
-    angle_x = np.random.normal(mean, std_dev_rotation)
-    angle_y = np.random.normal(mean, std_dev_rotation)
-    angle_z = np.random.normal(mean, std_dev_rotation)
+    # angle_x = np.random.normal(mean, std_dev_rotation)
+    # angle_y = np.random.normal(mean, std_dev_rotation)
+    # angle_z = np.random.normal(mean, std_dev_rotation)
 
-    rot_x = get_rotation_matrix('x', angle_x)
-    rot_y = get_rotation_matrix('y', angle_y)
-    rot_z = get_rotation_matrix('z', angle_z)
+    # rot_x = get_rotation_matrix('x', angle_x)
+    # rot_y = get_rotation_matrix('y', angle_y)
+    # rot_z = get_rotation_matrix('z', angle_z)
 
-    # Combined Rotation Matrix
-    combined_rot = np.matmul(rot_z, np.matmul(rot_y, rot_x))
+    # # Combined Rotation Matrix
+    # combined_rot = np.matmul(rot_z, np.matmul(rot_y, rot_x))
 
-    # Apply Rotation to Camera
-    rotated_R = np.matmul(viewpoint_cam.R, combined_rot)
+    # # Apply Rotation to Camera
+    # rotated_R = np.matmul(viewpoint_cam.R, combined_rot)
 
     # Update Camera Transformation
-    viewpoint_cam.world_view_transform = torch.tensor(getWorld2View2(rotated_R, viewpoint_cam.T, translate)).transpose(0, 1).cuda()
+    viewpoint_cam.world_view_transform = torch.tensor(getWorld2View2(viewpoint_cam.R, viewpoint_cam.T, translate)).transpose(0, 1).cuda()
     viewpoint_cam.full_proj_transform = (viewpoint_cam.world_view_transform.unsqueeze(0).bmm(viewpoint_cam.projection_matrix.unsqueeze(0))).squeeze(0)
     viewpoint_cam.camera_center = viewpoint_cam.world_view_transform.inverse()[3, :3]
 

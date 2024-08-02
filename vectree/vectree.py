@@ -5,6 +5,7 @@ from tqdm import tqdm, trange
 
 from vq import VectorQuantize
 from utils import read_ply_data, write_ply_data, load_vqgaussian
+import shutil
 
 
 def parse_args():
@@ -80,7 +81,7 @@ class Quantization():
     @torch.no_grad()
     def calc_vector_quantized_feature(self):
         """
-        apply vector quantize on gaussian attributes and return vq indexes
+        apply vector quantize on feature grid and return vq indexes
         """
         CHUNK = 8192
         feat_list = []
@@ -143,14 +144,14 @@ class Quantization():
             np.savez_compressed(f'{save_path}/extreme_saving/other_attribute.npz', wage_other_attribute)
 
             xyz = self.feats_bak[:, 0:3]
-            np.savez_compressed(f'{save_path}/extreme_saving/xyz.npz', xyz)  
+            wage_xyz = self.wage_vq(xyz)
+            np.savez_compressed(f'{save_path}/extreme_saving/xyz.npz', wage_xyz)  # octreed based compression will be updated 
             
-
         # zip everything together to get final size
         os.system(f"zip -r {save_path}/extreme_saving.zip {save_path}/extreme_saving")
         size = os.path.getsize(f'{save_path}/extreme_saving.zip')
         size_MB = size / 1024.0 / 1024.0
-        print("Size = {:.2f} MB".format(size_MB))
+        print("Size = ", size_MB, " MB")
             
         return all_feat, all_indice
     
@@ -184,7 +185,7 @@ class Quantization():
         IS_percent = IS_non_vq_point/IS_all_point
         print("IS_percent: ", IS_percent)
 
-        #=================== Codebook initialization & Update codebook ====================
+        #=================== Codebook initialization ====================
         self.model_vq.train()
         with torch.no_grad():
             self.vq_mask = torch.logical_xor(self.all_one_mask, self.non_vq_mask)                  
@@ -208,18 +209,23 @@ class Quantization():
 
     def dequantize(self):
         print("\n==================== Load saved data & Dequantize ==================== ")
-        dequantized_feats = load_vqgaussian(os.path.join(self.save_path,'extreme_saving'), device=device)
+        files_to_copy = ['cameras.json', 'cfg_args']
+        for file_name in files_to_copy:
+             shutil.copy(f"{self.imp_path}/{file_name}", f"{self.save_path}/{file_name}")
 
+        dequantized_feats = load_vqgaussian(os.path.join(self.save_path,'extreme_saving'), device=device)
+        # temp 
+        print("sh_0", (dequantized_feats[:,6+self.sh_dim]==0).sum())
+        ply_path = os.path.join(self.ply_path, 'point_cloud','iteration_40001')
         if self.no_save_ply == False:
-            os.makedirs(f'{self.ply_path}/', exist_ok=True)
-            write_ply_data(dequantized_feats.cpu().numpy(), self.ply_path, self.sh_dim)
+            os.makedirs(f'{ply_path}/', exist_ok=True)
+            write_ply_data(dequantized_feats.cpu().numpy(), ply_path, self.sh_dim)
 
 
 if __name__=='__main__':
     opt = parse_args()
     device = torch.device('cuda')
     vq = Quantization(opt)
-
     vq.quantize()
     vq.dequantize()
     

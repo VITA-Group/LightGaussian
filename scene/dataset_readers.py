@@ -29,6 +29,7 @@ from pathlib import Path
 from plyfile import PlyData, PlyElement
 from utils.sh_utils import SH2RGB
 from scene.gaussian_model import BasicPointCloud
+from icecream import ic 
 
 
 class CameraInfo(NamedTuple):
@@ -207,6 +208,7 @@ def readColmapSceneInfo(path, images, eval, llffhold=8):
     try:
         pcd = fetchPly(ply_path)
     except:
+        print("pcd is None")
         pcd = None
 
     scene_info = SceneInfo(
@@ -310,7 +312,9 @@ def readNerfSyntheticInfo(path, white_background, eval, extension=".png"):
         storePly(ply_path, xyz, SH2RGB(shs) * 255)
     try:
         pcd = fetchPly(ply_path)
+        
     except:
+        print("in excpet")
         pcd = None
 
     scene_info = SceneInfo(

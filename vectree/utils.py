@@ -2,6 +2,49 @@ import os, math, torch
 import numpy as np
 from plyfile import PlyData, PlyElement
 
+def load_vqsh(path, device='cuda'):
+    def load_f(name, allow_pickle=False,array_name='arr_0'):
+        return np.load(os.path.join(path,name),allow_pickle=allow_pickle)[array_name]
+
+    metadata = load_f('metadata.npz',allow_pickle=True,array_name='metadata')
+    metadata = metadata.item()
+
+    ## load basic info
+    codebook_size = metadata["codebook_size"]
+    codebook_dim = metadata["codebook_dim"]
+    bit_length = int(math.log2(codebook_size))  # log_2_K
+    input_pc_num = metadata["input_pc_num"]  # feats.shape[0]
+    input_pc_dim = metadata["input_pc_dim"]  # feats.shape[1]
+
+    # ===================================================== load vq_SH ============================================
+    ## loading the two masks
+    non_vq_mask = load_f("non_vq_mask.npz")
+    non_vq_mask = np.unpackbits(non_vq_mask)
+    non_vq_mask = non_vq_mask[:input_pc_num]
+    non_vq_mask = torch.from_numpy(non_vq_mask).bool().to(device)  # non_vq_mask
+    all_one_mask = torch.ones_like(non_vq_mask).bool().to(device)  # all_one_mask
+
+    ## loading codebook and vq indexes
+    codebook = load_f("codebook.npz")
+    codebook = torch.from_numpy(codebook).float().to(device)
+    vq_mask = torch.logical_xor(non_vq_mask, all_one_mask)  # vq_mask
+    vq_elements = vq_mask.sum()
+
+    vq_indexs = load_f("vq_indexs.npz")
+    vq_indexs = np.unpackbits(vq_indexs)
+    vq_indexs = vq_indexs[: vq_elements * bit_length].reshape(vq_elements, bit_length)
+    vq_indexs = torch.from_numpy(vq_indexs).float()
+    vq_indexs = bin2dec(vq_indexs, bits=bit_length)
+    vq_indexs = vq_indexs.long().to(device)  #
+
+    # ===================================================== load non_vq_SH ==========================================
+    # non_vq_feats = load_f("non_vq_feats.npz")
+    # non_vq_feats = torch.from_numpy(non_vq_feats).float().to(device)
+
+    # =========================================== load xyz & other attr(opacity + 3*scale + 4*rot)  ===============
+    return codebook, vq_indexs, non_vq_mask
+
+
 def load_vqgaussian(path, device='cuda'):
     def load_f(name, allow_pickle=False,array_name='arr_0'):
         return np.load(os.path.join(path,name),allow_pickle=allow_pickle)[array_name]
@@ -65,7 +108,6 @@ def load_vqgaussian(path, device='cuda'):
     return full_feats
 
 
-
 def read_ply_data(input_file):
     ply_data = PlyData.read(input_file)
     i = 0
@@ -109,4 +151,3 @@ def dec2bin(x, bits):
 def bin2dec(b, bits):
     mask = 2 ** torch.arange(bits - 1, -1, -1).to(b.device, b.dtype)
     return torch.sum(mask * b, -1)
-

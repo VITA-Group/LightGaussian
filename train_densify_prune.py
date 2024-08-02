@@ -242,18 +242,18 @@ if __name__ == "__main__":
         default=[7_000, 30_000],
     )
     parser.add_argument(
-        "--save_iterations", nargs="+", type=int, default=[7_000, 30_000]
+        "--save_iterations", nargs="+", type=int, default=[30_000 ]
     )
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument(
-        "--checkpoint_iterations", nargs="+", type=int, default=[7_000, 30_000]
+        "--checkpoint_iterations", nargs="+", type=int, default=[30_000]
     )
     parser.add_argument("--start_checkpoint", type=str, default=None)
 
     parser.add_argument(
-        "--prune_iterations", nargs="+", type=int, default=[16_000, 24_000]
+        "--prune_iterations", nargs="+", type=int, default=[24_000]
     )
-    parser.add_argument("--prune_percent", type=float, default=0.5)
+    parser.add_argument("--prune_percent", type=float, default=0.66)
     parser.add_argument("--v_pow", type=float, default=0.1)
     parser.add_argument("--prune_decay", type=float, default=0.8)
     args = parser.parse_args(sys.argv[1:])
