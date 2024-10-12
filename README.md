@@ -31,6 +31,12 @@ The codebase is based on [gaussian-splatting](https://github.com/graphdeco-inria
 The used datasets, MipNeRF360 and Tank & Temple, are hosted by the paper authors [here](https://jonbarron.info/mipnerf360/). 
 
 For installation:
+```
+git clone --recursive https://github.com/VITA-Group/LightGaussian.git
+cd LightGaussian
+# if you have already cloned LightGaussian:
+# git submodule update --init --recursive
+```
 ```shell
 conda env create --file environment.yml
 conda activate lightgaussian
